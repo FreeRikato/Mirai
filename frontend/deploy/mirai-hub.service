@@ -3,10 +3,10 @@ Description=mirai hub: fleet dashboard and history recorder, served on the tailn
 After=network-online.target
 
 [Service]
-WorkingDirectory=%h/mirai
+WorkingDirectory=__DIR__
 Environment=NODE_ENV=production PORT=3131
 EnvironmentFile=-%h/.config/mirai/hub.env
-ExecStart=__MISE__ exec bun -- bun src/index.ts
+ExecStart=__BUN__ src/index.ts
 KillMode=mixed
 Restart=on-failure
 RestartSec=5

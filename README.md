@@ -39,45 +39,45 @@ Every integration is optional. Without its key a page says what is missing inste
 
 ## Set up with an AI coding agent
 
-Paste this into Claude Code, Codex or any agent that can run shell commands on the machine you are setting up. It installs what is missing, builds everything, starts the services and finishes with `bun run doctor` as proof.
+Paste this into Claude Code, Codex or any agent that can run shell commands on the machine you are setting up. It installs what is missing, builds everything, installs the background services and finishes with `bun run doctor` as proof.
 
 ````text
 Set up Mirai (https://github.com/FreeRikato/mirai) on this machine, end to end, following its README exactly.
 
 1. Detect the OS. macOS and Linux are supported natively. On Windows, stop and tell me to open a WSL2 Ubuntu shell (README "Windows") and run you again inside it.
 2. Ask me one question: is this machine the hub, or only an agent reporting to a hub that already exists? If agent only, ask for the hub's Tailscale machine name.
-3. Install whatever is missing from the README "Prerequisites" for this OS (git, Bun, Rust, a C toolchain, Tailscale, jq). Use the official installers named there. Ask before any sudo command.
-4. If Tailscale is not connected, run `tailscale up` (or on macOS open the Tailscale app) and wait for me to sign in in the browser. Confirm with `tailscale status`.
-5. Clone the repo into ~/src/mirai if it is not already here (not ~/mirai, which is where deploy/install-hub.sh deploys to), then in frontend/: `bun install`, then `bun run build:agent`.
-6. Install the agent as a background service: `MIRAI_AGENT_HUB=<hub machine name> deploy/install-agent.sh local`. On the hub machine the hub name is this machine's own Tailscale name (`tailscale status --json | jq -r '.Self.DNSName | split(".")[0]'`).
+3. Install whatever is missing from the README "Prerequisites" for this OS, using the commands given there. Ask before any sudo command. Installers add Bun and Rust to PATH only for new terminals, so afterwards run: export PATH="$HOME/.bun/bin:$HOME/.cargo/bin:$PATH"
+4. If `tailscale status` says Tailscale is not connected: on Linux run `sudo tailscale up`, on macOS open the Tailscale app. Show me the sign-in link and wait until I have signed in, then confirm with `tailscale status`. On Linux also run once: sudo tailscale set --operator=$USER
+5. Clone the repo into ~/src/mirai if it is not already here (not ~/mirai, which deploy/install-hub.sh uses for remote deploys), then in ~/src/mirai/frontend: `bun install`, then `bun run build:agent`.
+6. Install the agent as a background service: `MIRAI_AGENT_HUB=<hub machine name> deploy/install-agent.sh local`. On the hub machine the hub name is this machine's own Tailscale name: tailscale status --json | jq -r '.Self.DNSName | split(".")[0]'
 7. Hub machine only: `cp .env.example .env && chmod 600 .env`. Then tell me which optional integrations exist (README "Configure") and let me paste any keys into frontend/.env myself in my editor. Never ask me to paste a key into this chat, never print .env, never echo a key in a command, and never commit .env.
-8. Hub machine only: start the hub. On Linux with systemd prefer the service from README "Keep the hub running"; otherwise run `bun run start` in a tmux or screen session that survives this chat.
-9. Run `bun run doctor` in frontend/ (agent-only machines: `bun run doctor --hub https://<hub machine>.<tailnet>.ts.net`, or `http://<hub machine>:3131` if the hub is not behind `tailscale serve`). Fix every FAIL using the hint printed next to it and run it again until there are no FAILs. "off" lines are optional integrations and are fine.
+8. Hub machine only: install the hub as a background service with `deploy/install-hub.sh local`. Do not run the hub in your own shell, it would stop when this session ends. If the script prints a tailscale serve hint, tell me what to turn on in the Tailscale admin console, and after I confirm, run the command it printed.
+9. Run `bun run doctor` in frontend/. On an agent-only machine run `bun run doctor --hub https://<hub machine>.<tailnet>.ts.net` (the tailnet name is in `tailscale status --json | jq -r .MagicDNSSuffix`). Fix every FAIL using the hint printed next to it and run it again until there are no FAILs. "off" lines are optional integrations and are fine. A new machine can take up to 30 seconds to show up on the hub.
 10. Finish by showing me the final doctor output verbatim and the URL where I can open the dashboard.
 ````
 
 ## Prerequisites
 
-| | macOS | Linux | Windows |
-| --- | --- | --- | --- |
-| Bun 1.3+ | `curl -fsSL https://bun.sh/install \| bash` | same | inside WSL2 |
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` | same | inside WSL2 |
-| C toolchain | `xcode-select --install` | `build-essential` / `base-devel` | inside WSL2 |
-| Tailscale | the Tailscale app, then **Settings → Install CLI** | `curl -fsSL https://tailscale.com/install.sh \| sh` | inside WSL2, see below |
-| git, jq | `brew install git jq` | your package manager | inside WSL2 |
-| service manager | launchd (built in) | systemd user services | systemd in WSL2 |
+| | macOS | Debian / Ubuntu / WSL2 | Fedora | Arch |
+| --- | --- | --- | --- | --- |
+| base tools | `xcode-select --install` (gives git and a C compiler; jq ships with macOS 15+, else `brew install jq`) | `sudo apt install -y build-essential git jq unzip curl` | `sudo dnf install -y gcc git jq unzip curl` | `sudo pacman -S --needed base-devel git jq unzip curl` |
+| Bun 1.3+ | `curl -fsSL https://bun.sh/install \| bash` | same | same | same |
+| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y` | same | same | same |
+| Tailscale | the [Tailscale app](https://tailscale.com/download/mac), then **Settings → Install CLI** | `curl -fsSL https://tailscale.com/install.sh \| sh` | same | same |
 
-Optional: `gh` (GitHub token without copying one), `yt-dlp` (YouTube playlists), `uv` and `ffmpeg` (local video transcripts), `mise` (only for `deploy/install-hub.sh`).
+Open a new terminal after installing Bun and Rust so they are on your PATH. On Linux, sign in with `sudo tailscale up` and then run `sudo tailscale set --operator=$USER` once, so the hub can publish itself with `tailscale serve` without sudo. The services use launchd on macOS and systemd user services on Linux.
+
+Optional: `gh` (GitHub token without copying one), `yt-dlp` (YouTube playlists), `uv` and `ffmpeg` (local video transcripts), `mise` (only for deploying the hub to another machine).
 
 ### Windows
 
-The agent reads `/proc`, `ps` and systemd, so it does not run on native Windows. Run Mirai inside WSL2, which behaves like the Linux column above:
+The agent reads `/proc`, `ps` and systemd, so it does not run on native Windows. Run Mirai inside WSL2 and follow the Debian / Ubuntu column:
 
 ```powershell
 wsl --install -d Ubuntu
 ```
 
-Open Ubuntu, make sure `/etc/wsl.conf` contains `[boot]` and `systemd=true` (new installs already do; run `wsl --shutdown` after changing it), then install Tailscale inside Ubuntu and run `sudo tailscale up`. The WSL2 instance joins your tailnet as its own machine. Its numbers describe the WSL2 VM, not the whole Windows host. From here on follow the Linux steps.
+Open Ubuntu and make sure `/etc/wsl.conf` contains `[boot]` and `systemd=true` (new installs already do; run `wsl --shutdown` in PowerShell after changing it). Install Tailscale inside Ubuntu as above. The WSL2 instance joins your tailnet as its own machine, and its numbers describe the WSL2 VM, not the whole Windows host. WSL2 stops when no Windows terminal uses it for a while, so a Windows machine makes a better agent than hub.
 
 ## Manual setup
 
@@ -102,16 +102,14 @@ From one machine you can also push a Linux agent to others over ssh: `MIRAI_AGEN
 ```sh
 cp .env.example .env
 chmod 600 .env
-bun run start
+deploy/install-hub.sh local
 ```
 
-Open http://127.0.0.1:3131. To reach it from your other devices over HTTPS, and to install it as a PWA on your phone:
+This builds the app and installs the hub as a background service (launchd on macOS, log in `~/Library/Logs/mirai-hub.log`; systemd on Linux, `journalctl --user -u mirai-hub`). It then publishes the hub to your tailnet with `tailscale serve`, which needs MagicDNS and HTTPS Certificates turned on in the [Tailscale admin console](https://login.tailscale.com/admin/dns). Run it again after pulling updates or changing `.env`.
 
-```sh
-tailscale serve --bg --https=443 http://127.0.0.1:3131
-```
+Open http://127.0.0.1:3131 on the hub, or `https://<hub machine>.<tailnet>.ts.net` from any of your devices, where you can also install it as an app.
 
-It is then at `https://<hub machine>.<tailnet>.ts.net`.
+To just try it without a service, `bun run start` runs the hub in the foreground.
 
 ### 3. Prove it works
 
@@ -128,7 +126,7 @@ mirai doctor
   ok    tailscale     this machine is homeserver
   ok    rust          cargo 1.90.0
   ok    agent build   ~/src/mirai/frontend/bin/mirai-agent-linux-x64
-  ok    agent         running on homeserver, answers only its hub
+  ok    agent         running on homeserver:7070
   ok    hub           3 machines on the tailnet, 3 reporting; homeserver at 4% cpu
   ok    github        signed in as octocat
   off   linear        LINEAR_API_KEY not set (Linear board)
@@ -137,13 +135,11 @@ mirai doctor
 
 The `hub` line is the end-to-end proof: the hub found this machine on the tailnet, reached its agent and received live metrics. Keys are checked with a harmless read-only call (who am I, list models) and are never printed, so the output is safe to paste into an issue. The command exits non-zero while anything says FAIL.
 
-On a machine that only runs an agent, point it at the hub: `bun run doctor --hub https://<hub>.<tailnet>.ts.net`. On a hub that reads its settings from `~/.config/mirai/hub.env`, load them first: `bun --env-file="$HOME/.config/mirai/hub.env" run doctor`.
+On a machine that only runs an agent, point it at the hub: `bun run doctor --hub https://<hub>.<tailnet>.ts.net`.
 
-### Keep the hub running
+### Deploy the hub to another machine
 
-On a Linux machine with systemd, `deploy/install-hub.sh <ssh host>` copies this tree to `~/mirai` on that host, builds it with `mise`, installs a `mirai-hub` user service, downloads `px0` for PR review and runs `tailscale serve`. Settings on that host live in `~/.config/mirai/hub.env`, which the script creates with mode 600 and never overwrites. Run it again to deploy an update. It works for the machine you are on too (`deploy/install-hub.sh localhost`, needs sshd), as long as your clone is not `~/mirai` itself: the deploy replaces that directory.
-
-On macOS, keep `bun run start` running in tmux, or use an always-on Linux box for the hub and only the agent on the Mac.
+`deploy/install-hub.sh <ssh host>` copies this tree to `~/mirai` on a Linux host with systemd and `mise`, builds it there, installs the `mirai-hub` user service, downloads `px0` for PR review and runs `tailscale serve`. Settings on that host live in `~/.config/mirai/hub.env`, which the script creates with mode 600 and never overwrites. Run it again to deploy an update. To check it, run the doctor there with those settings: `bun --env-file="$HOME/.config/mirai/hub.env" run doctor`.
 
 ## Configure
 

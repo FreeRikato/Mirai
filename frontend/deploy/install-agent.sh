@@ -11,7 +11,7 @@ install_systemd() {
   mkdir -p ~/.local/bin ~/.config/systemd/user
   mv /tmp/mirai-agent.new ~/.local/bin/mirai-agent
   mv /tmp/mirai-agent.service ~/.config/systemd/user/mirai-agent.service
-  loginctl enable-linger "$USER"
+  [[ "$(loginctl show-user "$USER" -p Linger --value 2>/dev/null)" == yes ]] || loginctl enable-linger "$USER" 2>/dev/null || sudo -n loginctl enable-linger "$USER" 2>/dev/null || echo "could not enable lingering, so the agent stops when you log out; fix with: sudo loginctl enable-linger $USER" >&2
   systemctl --user daemon-reload
   systemctl --user enable --now mirai-agent
   systemctl --user restart mirai-agent

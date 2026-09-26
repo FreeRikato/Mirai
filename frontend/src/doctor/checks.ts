@@ -91,7 +91,7 @@ async function hub(url: string, self: Self | null): Promise<Check> {
     if (!res.ok) return check("hub", "fail", `${url} answered ${res.status}`);
     fleet = FleetSchema.parse(await res.json());
   } catch (err: unknown) {
-    return check("hub", "fail", `not answering at ${url} (${reason(err)}), start it with: bun run start`);
+    return check("hub", "fail", `not answering at ${url} (${reason(err)}), start it with: deploy/install-hub.sh local`);
   }
   const live = fleet.machines.filter(m => m.kind === "live").length;
   const summary = `${fleet.machines.length} machine${fleet.machines.length === 1 ? "" : "s"} on the tailnet, ${live} reporting`;
