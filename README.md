@@ -2,6 +2,8 @@
 
 A personal dashboard for people who work across several machines. One hub shows every computer on your Tailscale network, your tasks, your pull requests, your saved reading and videos, your Obsidian notes and your AI coding spend, with an assistant (mirAI) that can answer questions about all of it.
 
+![Mirai fleet overview](docs/screenshots/machines.webp)
+
 | Page | What it shows | Needs |
 | --- | --- | --- |
 | machines | CPU, memory, temperature, disks, processes, ports and failed services for every machine, with history and alerts | Tailscale, the agent on each machine |
@@ -36,6 +38,86 @@ Every integration is optional. Without its key a page says what is missing inste
 - **hub** (`frontend/`): a Bun server and React app. It finds machines with `tailscale status`, polls each agent, keeps history in SQLite and talks to GitHub, Linear and OpenRouter. Pick one always-on machine for it.
 - **agent** (`agent/`): a small Rust binary on every machine you want to see. It listens only on the machine's Tailscale address and answers only the hub.
 - **highlighter** (`code/`): an optional Rust binary the hub uses to colour PR diffs.
+
+## Tour
+
+Every screenshot below comes from a demo fleet of six Docker containers with invented data; nothing in them is anyone's real work.
+
+### machines
+
+Live CPU, memory, disks and network paths for every machine on the tailnet, with events and history.
+
+![fleet overview](docs/screenshots/machines.webp)
+
+Open a machine for its cores, memory, disks, health, services and processes. Processes can be stopped from here.
+
+![one machine](docs/screenshots/machine-detail.webp)
+
+### projects
+
+What is running where: git worktrees with their dev servers, grouped by project across machines. Three views of the same data.
+
+![projects stack](docs/screenshots/projects.webp)
+
+| treemap | sky |
+| --- | --- |
+| ![projects treemap](docs/screenshots/projects-treemap.webp) | ![projects sky](docs/screenshots/projects-sky.webp) |
+
+### tasks
+
+Obsidian daily-note tasks, Linear issues and GitHub issues on one board, with a priority ranking that weighs what unblocks the most.
+
+![all tasks](docs/screenshots/tasks-all.webp)
+
+| daily notes | Linear | GitHub |
+| --- | --- | --- |
+| ![daily-note tasks](docs/screenshots/tasks-local.webp) | ![Linear board](docs/screenshots/tasks-linear.webp) | ![GitHub board](docs/screenshots/tasks-github.webp) |
+
+### ship
+
+Your open pull requests sorted by how close they are to merging, the ones waiting on your review, and a merge-readiness ranking.
+
+![pull requests](docs/screenshots/ship.webp)
+
+![pull request preview](docs/screenshots/ship-preview.webp)
+
+### content
+
+A read-later queue for articles, papers, posts and videos, with folders, a time budget and a "worth your time" ranking.
+
+![content queue](docs/screenshots/content.webp)
+
+| reader | video with local transcript |
+| --- | --- |
+| ![article reader](docs/screenshots/content-reader.webp) | ![video and transcript](docs/screenshots/content-watch.webp) |
+
+### notes
+
+Your Obsidian vault in the browser: a link graph, and a live-preview editor with backlinks.
+
+| graph | note |
+| --- | --- |
+| ![notes graph](docs/screenshots/notes-graph.webp) | ![a note](docs/screenshots/notes-note.webp) |
+
+### stats
+
+Claude Code and Codex usage per machine: cost, tokens, models and how much of your plan limits is left.
+
+![AI usage stats](docs/screenshots/stats.webp)
+
+### mirAI and the palette
+
+Ask about anything on screen. mirAI reads the same data the pages show and links its answers back into Mirai. `⌘K` searches pages, notes and content, or hands the question to mirAI.
+
+![mirAI side panel](docs/screenshots/mirai.webp)
+
+![command palette](docs/screenshots/palette.webp)
+
+### phone
+
+The same app as an installable PWA.
+
+![mobile views](docs/screenshots/mobile.webp)
 
 ## Set up with an AI coding agent
 
