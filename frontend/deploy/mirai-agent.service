@@ -1,0 +1,12 @@
+[Unit]
+Description=mirai-agent: reports this machine to the Mirai hub over the tailnet
+After=network-online.target
+
+[Service]
+Environment=MIRAI_AGENT_HUB=__HUB__
+ExecStart=%h/.local/bin/mirai-agent
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

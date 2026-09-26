@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The fleet mesh in miniature: three machines, three direct links, on true black. Kept inside the central 80% so it survives maskable cropping. -->
+  <rect width="512" height="512" fill="#000"/>
+  <g stroke="#fff" stroke-width="14" stroke-linecap="round">
+    <line x1="256" y1="150" x2="150" y2="336"/>
+    <line x1="256" y1="150" x2="362" y2="336"/>
+    <line x1="150" y1="336" x2="362" y2="336"/>
+  </g>
+  <circle cx="256" cy="150" r="46" fill="#6FD3FF"/>
+  <circle cx="150" cy="336" r="46" fill="#4FC8B8"/>
+  <circle cx="362" cy="336" r="46" fill="#E07BD8"/>
+</svg>

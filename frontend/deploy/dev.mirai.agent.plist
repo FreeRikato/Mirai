@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>dev.mirai.agent</string>
+  <key>ProgramArguments</key><array><string>__HOME__/.local/bin/mirai-agent</string></array>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>__PATH__</string><key>MIRAI_AGENT_HUB</key><string>__HUB__</string></dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/mirai-agent.log</string>
+</dict>
+</plist>

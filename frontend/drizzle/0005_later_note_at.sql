@@ -1,0 +1,1 @@
+ALTER TABLE `later_highlights` ADD `at` real;

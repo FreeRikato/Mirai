@@ -1,0 +1,5 @@
+[target.'cfg(unix)']
+linker = "/usr/bin/cc"
+
+[env]
+CC = "/usr/bin/cc"
