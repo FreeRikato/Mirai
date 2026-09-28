@@ -35,7 +35,6 @@ Item {
     notificationOutput.text = ""
     notificationProcess.command = ["bash", "-c", "notify-send -u critical -A open=Open \"$1\" \"$2\"", "mirai-notification", activeNotice.title, activeNotice.body]
     notificationProcess.running = true
-    notificationStall.restart()
   }
 
   function runNoticeCommand(notice) {
@@ -104,25 +103,11 @@ Item {
     }
   }
 
-  Timer {
-    id: notificationStall
-    interval: 6000
-    repeat: false
-    onTriggered: {
-      if (!notificationProcess.running) return
-      notificationProcess.running = false
-      notificationOutput.text = ""
-      root.activeNotice = null
-      root.startNotification()
-    }
-  }
-
   Process {
     id: notificationProcess
     running: false
     stdout: StdioCollector { id: notificationOutput; waitForEnd: true }
     onExited: {
-      notificationStall.stop()
       const notice = root.activeNotice
       root.activeNotice = null
       if (exitCode === 0 && notificationOutput.text.trim() === "open") root.runNoticeCommand(notice)
