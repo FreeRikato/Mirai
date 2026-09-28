@@ -8,21 +8,17 @@ import { normalizeMermaidColor } from "./mermaidTheme";
 const sanitizeGithubHtml = createSanitizer("https://github.com");
 
 
-function mermaidColor(name: string, fallback: string): string {
-  const resolved = systemThemeValue(name, fallback);
-  return normalizeMermaidColor(resolved, fallback);
-}
 
 function mermaidTheme() {
   return {
     darkMode: getComputedStyle(document.documentElement).colorScheme === "dark",
-    background: mermaidColor("--color-bg", "#000000"),
-    primaryColor: mermaidColor("--color-raise", "#0e0e0e"),
-    primaryTextColor: mermaidColor("--color-fg", "#ffffff"),
-    primaryBorderColor: mermaidColor("--color-faint", "#3a3a3a"),
-    lineColor: mermaidColor("--color-dim", "#8c8c8c"),
-    secondaryColor: mermaidColor("--color-lift", "#141414"),
-    tertiaryColor: mermaidColor("--color-popover", "#0a0a0a"),
+    background: normalizeMermaidColor(systemThemeValue("--color-bg", "#000000"), "#000000"),
+    primaryColor: normalizeMermaidColor(systemThemeValue("--color-raise", "#0e0e0e"), "#0e0e0e"),
+    primaryTextColor: normalizeMermaidColor(systemThemeValue("--color-fg", "#ffffff"), "#ffffff"),
+    primaryBorderColor: normalizeMermaidColor(systemThemeValue("--color-faint", "#3a3a3a"), "#3a3a3a"),
+    lineColor: normalizeMermaidColor(systemThemeValue("--color-dim", "#8c8c8c"), "#8c8c8c"),
+    secondaryColor: normalizeMermaidColor(systemThemeValue("--color-lift", "#141414"), "#141414"),
+    tertiaryColor: normalizeMermaidColor(systemThemeValue("--color-popover", "#0a0a0a"), "#0a0a0a"),
     fontFamily: systemThemeValue("--font-mono", '"Martian Mono", ui-monospace, monospace'),
     fontSize: "11px",
   };
