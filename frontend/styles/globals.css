@@ -20,7 +20,9 @@
   --color-lift: var(--mirai-lift, #141414);
   --color-drop: var(--mirai-drop, #0a0804);
   --color-link: var(--mirai-link, #7fa7ff);
-  --color-selection: var(--color-fg);
+  --color-selection: var(--mirai-selection, var(--color-fg));
+  --color-selection-text: var(--mirai-selection-text, var(--color-bg));
+  --color-accent: var(--mirai-accent, #161616);
   --color-active: var(--mirai-active, #ffffff);
   --color-focus: var(--mirai-focus, #3a3a3a);
 
@@ -91,7 +93,7 @@
   }
   ::selection {
     background: var(--color-selection, var(--color-fg));
-    color: var(--color-fg);
+    color: var(--color-selection-text, var(--color-bg));
   }
 }
 
