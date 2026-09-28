@@ -155,7 +155,7 @@ fn fontconfig_stamp(home: &Path) -> u64 {
 }
 
 fn monospace_family() -> String {
-    let output = Command::new("fc-match").arg("monospace").output();
+    let output = Command::new("fc-match").args(["monospace", "-f", "%{family}\\n"]).output();
     let stdout = output.ok().filter(|o| o.status.success()).map(|o| String::from_utf8_lossy(&o.stdout).into_owned()).unwrap_or_default();
     stdout.lines().next().and_then(|line| line.split(',').next()).and_then(|family| family.split(':').next()).map(str::trim).filter(|family| !family.is_empty()).unwrap_or_default().to_string()
 }
