@@ -12,54 +12,17 @@ quote() {
   printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\''/g")"
 }
 
-backup_file() {
+mark_created() {
   local path=$1
-  mkdir -p "$(dirname "$path")"
-  if [[ -e "$path.mirai.missing" ]]; then
-    :
-  elif [[ -e "$path" || -L "$path" ]]; then
-    [[ -e "$path.mirai.bak" || -L "$path.mirai.bak" ]] || cp -a "$path" "$path.mirai.bak"
-  else
-    [[ -e "$path.mirai.missing" ]] || : > "$path.mirai.missing"
-  fi
+  [[ -e "$path" ]] || : > "$path.mirai.created"
 }
-
-restore_file() {
-  local path=$1
-  if [[ -e "$path.mirai.bak" || -L "$path.mirai.bak" ]]; then
-    rm -rf "$path"
-    mv "$path.mirai.bak" "$path"
-  elif [[ -e "$path.mirai.missing" ]]; then
-    rm -rf "$path"
-  fi
-  rm -f "$path.mirai.missing"
-}
-
-record_baseline() {
-  local path=$1
-  [[ -e "$path" ]] || return 0
-  [[ -e "$path.mirai.installed.bak" ]] || cp -a "$path" "$path.mirai.installed.bak"
-}
-
-restore_if_unchanged() {
-  local path=$1
-  local baseline="$path.mirai.installed.bak"
-  [[ -e "$baseline" ]] || return 1
-  if cmp -s "$path" "$baseline"; then
-    restore_file "$path"
-    rm -f "$baseline"
-    return 0
-  fi
-  return 1
-}
-
 
 append_block() {
   local path=$1
   local body=$2
   mkdir -p "$(dirname "$path")"
   if ! grep -Fq "$MARK_BEGIN" "$path" 2>/dev/null; then
-    if [[ -s "$path" && "$(tail -c 1 "$path")" != $'\n' ]]; then printf '\n' >> "$path"; fi
+    if [[ -s "$path" && "$(tail -c 1 "$path"; printf x)" != $'\nx' ]]; then printf '\n' >> "$path"; fi
     printf '%b\n' "$body" >> "$path"
   fi
 }
@@ -89,6 +52,47 @@ for line in lines:
 with open(path, "w", encoding="utf-8") as handle:
     handle.writelines(result)
 PY
+}
+
+# Strips the marked block; deletes the file only when Mirai created it (no
+# .mirai.created marker means it was already there before install) and
+# nothing but that block is left in it.
+remove_marked_lua() {
+  local path=$1
+  if [[ ! -f "$path" ]]; then
+    rm -f "$path.mirai.created"
+    return 0
+  fi
+  remove_marked_block "$path"
+  if [[ -e "$path.mirai.created" ]]; then
+    [[ -s "$path" ]] || rm -f "$path"
+    rm -f "$path.mirai.created"
+  fi
+}
+
+remove_marked_menu() {
+  local path=$1
+  if [[ ! -f "$path" ]]; then
+    rm -f "$path.mirai.created"
+    return 0
+  fi
+  remove_marked_block "$path"
+  if [[ -e "$path.mirai.created" ]]; then
+    if python3 - "$path" <<'PY'
+import re
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    text = handle.read()
+text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+text = re.sub(r"//[^\n]*", "", text)
+sys.exit(0 if re.sub(r"\s+", "", text) in ("{}", "") else 1)
+PY
+    then
+      rm -f "$path"
+    fi
+    rm -f "$path.mirai.created"
+  fi
 }
 
 remove_shell_entry() {
@@ -160,12 +164,17 @@ update_menu() {
   local hub=$2
   python3 - "$menu" "$hub" "$MARK_BEGIN" "$MARK_END" <<'PY'
 import json
+import os
+import re
 import shlex
 import sys
 
 path, hub, begin, end = sys.argv[1:]
-with open(path, encoding="utf-8") as handle:
-    text = handle.read()
+if os.path.exists(path):
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read()
+else:
+    text = "{\n}\n"
 if begin in text:
     raise SystemExit(0)
 
@@ -188,8 +197,9 @@ position = text.find("{")
 if position < 0:
     raise SystemExit(f"{path} is not a JSONC object")
 insert_at = position + 1
+rest = re.sub(r"^\n+", "", text[insert_at:])
 insert = "\n" + "\n".join(block) + "\n"
-text = text[:insert_at] + insert + text[insert_at:]
+text = text[:insert_at] + insert + rest
 with open(path, "w", encoding="utf-8") as handle:
     handle.write(text)
 PY
@@ -247,15 +257,17 @@ install_local() {
   local icon="$HOME/.local/share/icons/hicolor/512x512/apps/mirai.png"
   local launcher="$HOME/.local/bin/mirai-desktop-open"
 
-  for path in "$shell_json" "$bindings" "$hyprland" "$menu"; do backup_file "$path"; done
   mkdir -p "$HOME/.config/omarchy" "$HOME/.config/hypr" "$HOME/.config/omarchy/extensions" "$HOME/.config/omarchy/plugins" "$PLUGIN_DIR" "$HOME/.local/share/applications" "$HOME/.local/share/icons/hicolor/512x512/apps" "$HOME/.local/bin"
+
+  mark_created "$bindings"
+  mark_created "$hyprland"
+  mark_created "$menu"
 
   append_block "$bindings" "-- $MARK_BEGIN\nhl.unbind(\"SUPER + M\")\nhl.unbind(\"SUPER + ALT + M\")\no.bind(\"SUPER + M\", \"Mirai\", \"mirai-desktop-open /machines\")\no.bind(\"SUPER + ALT + M\", \"Ask mirAI\", \"mirai-desktop-open '/machines?mirai=1'\")\n-- $MARK_END"
   append_block "$hyprland" "-- $MARK_BEGIN\no.window(\"mirai\", { opacity = 1.0 })\n-- $MARK_END"
 
   update_shell_layout "$shell_json" "$hub"
   update_menu "$menu" "$hub"
-  for path in "$shell_json" "$bindings" "$hyprland" "$menu"; do record_baseline "$path"; done
 
   cp "$SCRIPT_DIR/desktop/manifest.json" "$PLUGIN_DIR/manifest.json"
   cp "$SCRIPT_DIR/desktop/Fleet.qml" "$PLUGIN_DIR/Fleet.qml"
@@ -289,22 +301,10 @@ remove_local() {
 
   rm -rf "$PLUGIN_DIR"
   rm -f "$launcher" "$desktop" "$icon"
-  if ! restore_if_unchanged "$shell_json"; then
-    remove_shell_entry "$shell_json"
-    rm -f "$shell_json.mirai.installed.bak" "$shell_json.mirai.bak" "$shell_json.mirai.missing"
-  fi
-  if ! restore_if_unchanged "$bindings"; then
-    remove_marked_block "$bindings"
-    rm -f "$bindings.mirai.installed.bak" "$bindings.mirai.bak" "$bindings.mirai.missing"
-  fi
-  if ! restore_if_unchanged "$hyprland"; then
-    remove_marked_block "$hyprland"
-    rm -f "$hyprland.mirai.installed.bak" "$hyprland.mirai.bak" "$hyprland.mirai.missing"
-  fi
-  if ! restore_if_unchanged "$menu"; then
-    remove_marked_block "$menu"
-    rm -f "$menu.mirai.installed.bak" "$menu.mirai.bak" "$menu.mirai.missing"
-  fi
+  remove_shell_entry "$shell_json"
+  remove_marked_lua "$bindings"
+  remove_marked_lua "$hyprland"
+  remove_marked_menu "$menu"
   if command -v omarchy-restart-shell >/dev/null 2>&1; then omarchy-restart-shell >/dev/null 2>&1 || true; fi
   echo "local: removed"
 }
