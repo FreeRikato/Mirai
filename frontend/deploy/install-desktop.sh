@@ -245,8 +245,9 @@ for host in "$@"; do
     continue
   fi
   remote_dir="/tmp/mirai-desktop-install-$$"
-  ssh "$host" "mkdir -p '$remote_dir'"
-  scp -q "$SCRIPT_DIR/install-desktop.sh" "$SCRIPT_DIR/desktop/manifest.json" "$SCRIPT_DIR/desktop/Fleet.qml" "$SCRIPT_DIR/desktop/fleet.mjs" "${MIRAI_DESKTOP_ICON:-$FRONTEND_DIR/public/icons/icon-512.png}" "$host:$remote_dir/"
+  ssh "$host" "mkdir -p '$remote_dir/desktop'"
+  scp -q "$SCRIPT_DIR/install-desktop.sh" "${MIRAI_DESKTOP_ICON:-$FRONTEND_DIR/public/icons/icon-512.png}" "$host:$remote_dir/"
+  scp -q "$SCRIPT_DIR/desktop/manifest.json" "$SCRIPT_DIR/desktop/Fleet.qml" "$SCRIPT_DIR/desktop/fleet.mjs" "$host:$remote_dir/desktop/"
   if (( remove )); then
     ssh "$host" "HOME=\"\$HOME\" bash '$remote_dir/install-desktop.sh' --remove local; rm -rf '$remote_dir'"
   else
