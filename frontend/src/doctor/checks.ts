@@ -80,9 +80,32 @@ async function agent(self: Self | null, port: number): Promise<Check> {
   }
 }
 
-const FleetSchema = z.object({
-  machines: z.array(z.object({ kind: z.enum(["live", "no-agent", "offline"]), ts: z.object({ name: z.string() }), metrics: z.object({ cpu: z.object({ load: z.number() }) }).optional() })),
+const SystemSchema = z.object({
+  mode: z.enum(["dark", "light"]),
+  colors: z.record(z.string(), z.string()),
+  monoFont: z.string(),
 });
+
+const FleetSchema = z.object({
+  machines: z.array(z.object({
+    kind: z.enum(["live", "no-agent", "offline"]),
+    ts: z.object({ name: z.string() }),
+    metrics: z.object({
+      cpu: z.object({ load: z.number() }),
+      system: SystemSchema.optional(),
+    }).optional(),
+  })),
+});
+
+const ShellEntrySchema = z.object({ id: z.string(), hub: z.string().url().optional() }).passthrough();
+const ShellConfigSchema = z.object({
+  bar: z.object({ layout: z.record(z.string(), z.array(z.unknown())) }),
+}).passthrough();
+const PluginManifestSchema = z.object({
+  id: z.literal("mirai.fleet"),
+  kinds: z.array(z.string()),
+  entryPoints: z.object({ barWidget: z.string() }),
+}).passthrough();
 
 async function hub(url: string, self: Self | null): Promise<Check> {
   let fleet: z.infer<typeof FleetSchema>;
@@ -194,17 +217,24 @@ function desktopWidget(home: string): Check {
   const shell = join(home, ".config", "omarchy", "shell.json");
   const plugin = join(home, ".config", "omarchy", "plugins", "mirai.fleet");
   try {
-    const config = JSON.parse(readFileSync(shell, "utf8")) as { bar?: { layout?: Record<string, unknown> } };
-    const layout = config.bar?.layout ?? {};
-    const entries = Object.values(layout).flatMap(section => (Array.isArray(section) ? section : []));
-    const placed = entries.some(entry => typeof entry === "object" && entry !== null && "id" in entry && entry.id === "mirai.fleet");
-    if (placed && existsSync(join(plugin, "manifest.json")) && existsSync(join(plugin, "Fleet.qml")) && existsSync(join(plugin, "fleet.mjs"))) {
+    const config = ShellConfigSchema.parse(JSON.parse(readFileSync(shell, "utf8")));
+    const entries = Object.values(config.bar.layout).flat();
+    const placed = entries.some(entry => {
+      const parsed = ShellEntrySchema.safeParse(entry);
+      return parsed.success && parsed.data.id === "mirai.fleet" && typeof parsed.data.hub === "string";
+    });
+    const manifest = PluginManifestSchema.parse(JSON.parse(readFileSync(join(plugin, "manifest.json"), "utf8")));
+    const files = manifest.entryPoints.barWidget === "Fleet.qml"
+      && manifest.kinds.includes("bar-widget")
+      && existsSync(join(plugin, manifest.entryPoints.barWidget))
+      && existsSync(join(plugin, "fleet.mjs"));
+    if (placed && manifest.id === "mirai.fleet" && files) {
       return check("desktop bar widget", "ok", "mirai.fleet installed");
     }
   } catch {
     // Fall through to the actionable installation check.
   }
-  return check("desktop bar widget", "warn", "missing, run: deploy/install-desktop.sh local");
+  return check("desktop bar widget", "warn", "missing, run: install-desktop.sh local");
 }
 
 async function desktopTheme(url: string, self: Self | null): Promise<Check> {
@@ -212,10 +242,10 @@ async function desktopTheme(url: string, self: Self | null): Promise<Check> {
   try {
     const response = await fetch(`${url}/api/fleet`, { signal: AbortSignal.timeout(TIMEOUT_MS) });
     if (!response.ok) return check("desktop System theme", "warn", `${url} answered ${response.status}`);
-    const fleet = (await response.json()) as { machines?: Array<{ kind?: string; ts?: { name?: string }; metrics?: { system?: unknown } }> };
-    const machine = fleet.machines?.find(candidate => candidate.ts?.name === self.name);
-    const system = machine?.kind === "live" && machine.metrics?.system;
-    return system && typeof system === "object" ? check("desktop System theme", "ok", "agent reports the System theme") : check("desktop System theme", "warn", "agent does not report the System theme");
+    const fleet = FleetSchema.parse(await response.json());
+    const machine = fleet.machines.find(candidate => candidate.ts.name === self.name);
+    const system = machine?.kind === "live" ? machine.metrics?.system : undefined;
+    return system ? check("desktop System theme", "ok", "agent reports the System theme") : check("desktop System theme", "warn", "agent does not report the System theme");
   } catch (err: unknown) {
     return check("desktop System theme", "warn", `could not verify the System theme (${reason(err)})`);
   }
