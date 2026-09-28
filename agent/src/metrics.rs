@@ -1,12 +1,16 @@
-use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{Duration, Instant};
+use std::hash::{Hash, Hasher};
 
 use chrono::{Local, TimeZone};
 use sysinfo::{Components, CpuRefreshKind, DiskRefreshKind, Disks, MemoryRefreshKind, Networks, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind, Users};
+use walkdir::WalkDir;
 
 use crate::processes::{self, RawProcess, by_cpu, round1};
-use crate::schema::{Battery, Cpu, Disk, Info, Io, Mem, Metrics, Port, Service, Temp, TopProc};
+use crate::schema::{Battery, Cpu, Disk, Info, Io, Mem, Metrics, Port, Service, SystemTheme, SystemThemeMode, Temp, TopProc};
 use crate::{VERSION, ports, services, tailscale};
 
 const MIN_REFRESH: Duration = Duration::from_millis(1000);
@@ -108,6 +112,85 @@ impl<T> Timed<T> {
 fn timed<T>(value: T) -> Timed<T> {
     Timed { at: None, value }
 }
+const SYSTEM_THEME_PATH: &str = ".local/state/omarchy/current/theme/colors.toml";
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct FontCache {
+    stamp: u64,
+    family: String,
+}
+
+fn hash_metadata(path: &Path, hasher: &mut std::collections::hash_map::DefaultHasher) {
+    path.hash(hasher);
+    match fs::metadata(path) {
+        Ok(metadata) => {
+            true.hash(hasher);
+            metadata.len().hash(hasher);
+            metadata.is_dir().hash(hasher);
+            metadata.modified().ok().hash(hasher);
+        }
+        Err(_) => false.hash(hasher),
+    }
+}
+
+fn fontconfig_stamp(home: &Path) -> u64 {
+    let roots = [
+        home.join(".config/fontconfig"),
+        home.join(".fonts.conf"),
+        home.join(".fonts"),
+        home.join(".local/share/fonts"),
+        PathBuf::from("/etc/fonts"),
+    ];
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for root in roots {
+        if root.is_dir() {
+            for entry in WalkDir::new(&root).follow_links(false).sort_by_file_name().into_iter().filter_map(Result::ok) {
+                hash_metadata(entry.path(), &mut hasher);
+            }
+        } else {
+            hash_metadata(&root, &mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+fn monospace_family() -> String {
+    let output = Command::new("fc-match").arg("monospace").output();
+    let stdout = output.ok().filter(|o| o.status.success()).map(|o| String::from_utf8_lossy(&o.stdout).into_owned()).unwrap_or_default();
+    stdout.lines().next().and_then(|line| line.split(',').next()).and_then(|family| family.split(':').next()).map(str::trim).filter(|family| !family.is_empty()).unwrap_or_default().to_string()
+}
+
+fn toml_string(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    let quote = raw.chars().next()?;
+    if quote != '"' && quote != '\'' {
+        return None;
+    }
+    let value = &raw[quote.len_utf8()..];
+    let end = value.find(quote)?;
+    Some(value[..end].to_string())
+}
+
+fn system_theme(path: &Path, mono_font: String) -> Option<SystemTheme> {
+    let body = fs::read_to_string(path).ok()?;
+    let mut mode = None;
+    let mut colors = BTreeMap::new();
+    for line in body.lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')) {
+        let Some((key, raw)) = line.split_once('=') else { continue };
+        let Some(value) = toml_string(raw) else { continue };
+        let key = key.trim();
+        if key == "mode" {
+            mode = Some(match value.as_str() {
+                "dark" => SystemThemeMode::Dark,
+                "light" => SystemThemeMode::Light,
+                _ => return None,
+            });
+        } else {
+            colors.insert(key.to_string(), value);
+        }
+    }
+    Some(SystemTheme { mode: mode?, colors, mono_font })
+}
 
 pub struct Settings {
     pub tailscale_bin: String,
@@ -136,6 +219,7 @@ pub struct Sampler {
     services: Timed<Vec<Service>>,
     ps_table: Timed<Vec<RawProcess>>,
     ports: Timed<Vec<Port>>,
+    font: Option<FontCache>,
 }
 
 fn process_kind() -> ProcessRefreshKind {
@@ -172,7 +256,21 @@ impl Sampler {
             services: timed(vec![]),
             ps_table: timed(vec![]),
             ports: timed(vec![]),
+            font: None,
         }
+    }
+    fn system_theme(&mut self) -> Option<SystemTheme> {
+        let path = self.settings.home.join(SYSTEM_THEME_PATH);
+        if !path.is_file() {
+            return None;
+        }
+        let stamp = fontconfig_stamp(&self.settings.home);
+        let reload = self.font.as_ref().is_none_or(|cache| cache.stamp != stamp);
+        if reload {
+            self.font = Some(FontCache { stamp, family: monospace_family() });
+        }
+        let mono_font = self.font.as_ref().map(|cache| cache.family.clone()).unwrap_or_default();
+        system_theme(&path, mono_font)
     }
 
     pub fn refresh(&mut self) {
@@ -309,6 +407,7 @@ impl Sampler {
             battery,
             top_procs,
             failed_services,
+            system: self.system_theme(),
         }
     }
 }
