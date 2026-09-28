@@ -55,7 +55,7 @@ export const MetricsSchema = z.object({
     .object({
       mode: z.enum(["dark", "light"]),
       colors: z.record(z.string(), z.string()),
-      monoFont: z.string(),
+      monoFont: z.string().optional(),
     })
     .optional(),
 });

@@ -119,8 +119,9 @@ export function systemThemeVars(theme: SystemTheme): Record<string, string> {
     "--color-bad": status.bad,
     "--color-dim": mix(58),
     "--color-soft": mix(82),
-    "--font-mono": `${JSON.stringify(theme.monoFont)}, monospace`,
   };
+  const monoFont = theme.monoFont?.trim();
+  if (monoFont) vars["--font-mono"] = `${JSON.stringify(monoFont)}, monospace`;
   for (const [name, share] of Object.entries(GREYS)) vars[`--color-${name}`] = mix(share);
   MACHINE_KEYS.forEach((key, i) => {
     vars[`--color-machine-${i + 1}`] = pick(key, BUILT_IN.machine[i] ?? BUILT_IN.machine[0]);
