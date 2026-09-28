@@ -213,7 +213,7 @@ function Thread({ thread }: { thread: RedditThread }) {
         </a>
       )}
       <MediaGrid media={thread.media} />
-      {thread.html && <RedditHtml html={thread.html} className="text-[1.06em] leading-[1.7] text-[#ececec]" />}
+      {thread.html && <RedditHtml html={thread.html} className="text-[1.06em] leading-[1.7] text-soft" />}
     </section>
   );
 }
@@ -255,9 +255,9 @@ function CommentNode({ comment, threadUrl, op }: { comment: RedditComment; threa
       </button>
       {open && (
         <>
-          <RedditHtml html={comment.html} className="text-[0.97em] leading-[1.62] text-[#e6e6e6]" />
+          <RedditHtml html={comment.html} className="text-[0.97em] leading-[1.62] text-soft" />
           {(comment.replies.length > 0 || comment.more > 0) && (
-            <div className="mt-[0.6em] flex flex-col gap-[1.35em] border-l border-[#2a2a2a] pl-[1.1em]">
+            <div className="mt-[0.6em] flex flex-col gap-[1.35em] border-l border-rule pl-[1.1em]">
               {comment.replies.map(r => (
                 <CommentNode key={r.id} comment={r} threadUrl={threadUrl} op={op} />
               ))}

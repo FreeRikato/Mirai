@@ -37,6 +37,7 @@ export const SYSTEM_THEME_VARIABLES = [
   "--color-bg",
   "--color-fg",
   "--color-link",
+  "--color-accent",
   "--color-selection",
   "--color-active",
   "--color-focus",
@@ -93,6 +94,7 @@ export function systemThemeVars(theme: SystemTheme): Record<string, string> {
     "--color-fg": fg,
     "--color-link": pick("accent", BUILT_IN.link),
     "--color-selection": pick("selection", fg),
+    "--color-accent": "var(--color-selection)",
     "--color-active": "var(--color-link)",
     "--color-focus": "var(--color-link)",
     "--color-ok": status.ok,
@@ -130,7 +132,7 @@ export function applySystemTheme(theme: SystemTheme | undefined): void {
     for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value);
     for (const [name, alias] of Object.entries(SYSTEM_THEME_ALIASES)) {
       const value = vars[name];
-      if (value !== undefined) root.style.setProperty(alias, name === "--color-accent" ? vars["--color-selection"] ?? value : value);
+      if (value !== undefined) root.style.setProperty(alias, value);
     }
     root.style.colorScheme = theme.mode;
   } else {
