@@ -415,6 +415,7 @@ impl Sampler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     fn row(device: &str, fs_type: &str, mount: &str, size: u64, used: u64) -> DiskRow {
         DiskRow { device: device.into(), fs_type: fs_type.into(), mount: mount.into(), size, used }
@@ -449,5 +450,31 @@ mod tests {
     fn cpu_models_lose_trademark_noise_and_the_clock_suffix() {
         assert_eq!(clean_cpu_model("Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz"), "Intel Core i7-10750H");
         assert_eq!(clean_cpu_model("Apple M5"), "Apple M5");
+    }
+
+    #[test]
+    fn system_theme_resolves_omarchy_mode_fallbacks_without_dropping_colors() {
+        let cases = [
+            ("mode = \"light\"\ntheme_type = \"dark\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("theme_type = \"light\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("mode = \"unknown\"\ntheme_type = \"light\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("background = \"#000000\"\n", true, SystemThemeMode::Light),
+            ("background = \"#ffffff\"\n", false, SystemThemeMode::Light),
+            ("background = \"#7f7f7f\"\n", false, SystemThemeMode::Dark),
+            ("accent = \"#123456\"\n", false, SystemThemeMode::Dark),
+        ];
+
+        for (body, light_marker, expected) in cases {
+            let dir = tempdir().expect("theme directory");
+            let path = dir.path().join("colors.toml");
+            fs::write(&path, body).expect("colors.toml");
+            if light_marker {
+                fs::write(dir.path().join("light.mode"), "").expect("light.mode");
+            }
+
+            let theme = system_theme(&path, "Mono".into()).expect("colors.toml always reports system");
+            assert_eq!(theme.mode, expected, "mode for {body:?}");
+            assert_eq!(theme.colors.get("accent").map(String::as_str), body.contains("accent =").then_some("#123456"), "colors remain present");
+        }
     }
 }
