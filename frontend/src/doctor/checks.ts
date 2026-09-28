@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
@@ -170,6 +170,62 @@ function vault(dir: string | undefined): Check {
   return check("vault", "ok", tilde(dir));
 }
 
+function desktopWebApp(home: string): Check {
+  const path = join(home, ".local", "share", "applications", "mirai.desktop");
+  if (!existsSync(path)) return check("desktop web app", "warn", "missing, run: deploy/install-desktop.sh local");
+  try {
+    const body = readFileSync(path, "utf8");
+    if (/^Name=Mirai$/m.test(body) && /^Exec=.*mirai-desktop-open/m.test(body)) return check("desktop web app", "ok", tilde(path));
+  } catch {
+    // Report the same actionable failure as a missing entry.
+  }
+  return check("desktop web app", "warn", "invalid, run: deploy/install-desktop.sh local");
+}
+
+function desktopBindings(home: string): Check {
+  const paths = [join(home, ".config", "hypr", "bindings.lua"), join(home, ".config", "hypr", "hyprland.lua")];
+  const body = paths.filter(existsSync).map(path => readFileSync(path, "utf8")).join("\n");
+  return body.includes("mirai-desktop-open") && /SUPER\s*\+\s*(ALT\s*\+\s*)?M/.test(body)
+    ? check("desktop bindings", "ok", "SUPER+M and SUPER+ALT+M installed")
+    : check("desktop bindings", "warn", "missing, run: deploy/install-desktop.sh local");
+}
+
+function desktopWidget(home: string): Check {
+  const shell = join(home, ".config", "omarchy", "shell.json");
+  const plugin = join(home, ".config", "omarchy", "plugins", "mirai.fleet");
+  try {
+    const config = JSON.parse(readFileSync(shell, "utf8")) as { bar?: { layout?: Record<string, unknown> } };
+    const layout = config.bar?.layout ?? {};
+    const entries = Object.values(layout).flatMap(section => (Array.isArray(section) ? section : []));
+    const placed = entries.some(entry => typeof entry === "object" && entry !== null && "id" in entry && entry.id === "mirai.fleet");
+    if (placed && existsSync(join(plugin, "manifest.json")) && existsSync(join(plugin, "Fleet.qml")) && existsSync(join(plugin, "fleet.mjs"))) {
+      return check("desktop bar widget", "ok", "mirai.fleet installed");
+    }
+  } catch {
+    // Fall through to the actionable installation check.
+  }
+  return check("desktop bar widget", "warn", "missing, run: deploy/install-desktop.sh local");
+}
+
+async function desktopTheme(url: string, self: Self | null): Promise<Check> {
+  if (!self) return check("desktop System theme", "warn", "needs Tailscale first");
+  try {
+    const response = await fetch(`${url}/api/fleet`, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    if (!response.ok) return check("desktop System theme", "warn", `${url} answered ${response.status}`);
+    const fleet = (await response.json()) as { machines?: Array<{ kind?: string; ts?: { name?: string }; metrics?: { system?: unknown } }> };
+    const machine = fleet.machines?.find(candidate => candidate.ts?.name === self.name);
+    const system = machine?.kind === "live" && machine.metrics?.system;
+    return system && typeof system === "object" ? check("desktop System theme", "ok", "agent reports the System theme") : check("desktop System theme", "warn", "agent does not report the System theme");
+  } catch (err: unknown) {
+    return check("desktop System theme", "warn", `could not verify the System theme (${reason(err)})`);
+  }
+}
+
+async function desktopChecks(input: DoctorInput, url: string, self: Self | null): Promise<Check[]> {
+  const home = input.env.HOME?.trim() || homedir();
+  if (!existsSync(join(home, ".config", "omarchy", "shell.json"))) return [];
+  return [desktopWebApp(home), desktopBindings(home), desktopWidget(home), await desktopTheme(url, self)];
+}
 function tool(name: string, bin: string | undefined, off: string): Check {
   if (!bin) return check(name, "off", off);
   const found = existsSync(bin) ? bin : Bun.which(bin);
@@ -187,6 +243,7 @@ export async function runDoctor(input: DoctorInput): Promise<Check[]> {
   const { result, self } = await tailscale(config.fleet.tailscaleBin);
   const hubUrl = (input.hubUrl ?? `http://127.0.0.1:${config.server.port}`).replace(/\/$/, "");
   const [rust, agentCheck, hubCheck, signins] = await Promise.all([cargo(), agent(self, config.fleet.agentPort), hub(hubUrl, self), Promise.all(integrations(config, input))]);
+  const desktop = await desktopChecks(input, hubUrl, self);
   return [
     ...base,
     check("settings", "ok", "valid"),
@@ -196,6 +253,7 @@ export async function runDoctor(input: DoctorInput): Promise<Check[]> {
     agentCheck,
     hubCheck,
     ...signins,
+    ...desktop,
     vault(config.tasks.vaultDir),
     check("ship", config.ship.org ? "ok" : "off", config.ship.org ? `org ${config.ship.org}` : "MIRAI_SHIP_ORG not set (pull request view)"),
     tool("yt-dlp", config.later.ytdlpBin, "not installed (saving YouTube playlists)"),
