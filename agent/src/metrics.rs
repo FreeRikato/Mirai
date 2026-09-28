@@ -509,4 +509,15 @@ mod tests {
             assert_eq!(theme.colors.get("accent").map(String::as_str), body.contains("accent =").then_some("#123456"), "colors remain present");
         }
     }
+
+    #[test]
+    fn system_theme_accepts_a_utf8_bom_before_the_mode_key() {
+        let dir = tempdir().expect("theme directory");
+        let path = dir.path().join("colors.toml");
+        fs::write(&path, "\u{feff}mode = \"light\"\nbackground = \"#000000\"\n").expect("colors.toml");
+
+        let theme = system_theme(&path, "Mono".into()).expect("colors.toml always reports system");
+        assert_eq!(theme.mode, SystemThemeMode::Light);
+        assert_eq!(theme.colors.get("background").map(String::as_str), Some("#000000"));
+    }
 }
