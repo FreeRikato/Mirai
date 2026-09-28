@@ -76,7 +76,7 @@ for section in ("left", "center", "right"):
     layout.setdefault(section, [])
 right = layout["right"]
 right[:] = [entry for entry in right if entry.get("id") != "mirai.fleet"]
-entry = {"id": "mirai.fleet", "type": "qml", "settings": {"hub": hub}}
+entry = {"id": "mirai.fleet", "hub": hub}
 clock = next((index for index, item in enumerate(right) if item.get("id") == "omarchy.clock"), None)
 if clock is None:
     right.append(entry)
@@ -191,7 +191,6 @@ install_local() {
   cp "$SCRIPT_DIR/desktop/manifest.json" "$PLUGIN_DIR/manifest.json"
   cp "$SCRIPT_DIR/desktop/Fleet.qml" "$PLUGIN_DIR/Fleet.qml"
   cp "$SCRIPT_DIR/desktop/fleet.mjs" "$PLUGIN_DIR/fleet.mjs"
-  printf '%s\n' "$hub" > "$PLUGIN_DIR/hub"
   cp "${MIRAI_DESKTOP_ICON:-$FRONTEND_DIR/public/icons/icon-512.png}" "$icon"
   cat > "$desktop" <<EOF
 [Desktop Entry]
