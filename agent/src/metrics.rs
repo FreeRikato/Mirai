@@ -163,33 +163,65 @@ fn monospace_family() -> String {
 fn toml_string(raw: &str) -> Option<String> {
     let raw = raw.trim();
     let quote = raw.chars().next()?;
-    if quote != '"' && quote != '\'' {
+    if quote == '"' || quote == '\'' {
+        let value = &raw[quote.len_utf8()..];
+        let end = value.find(quote)?;
+        return Some(value[..end].to_string());
+    }
+    Some(raw.split('#').next()?.split_whitespace().next()?.to_string())
+}
+
+fn theme_mode(value: Option<&str>) -> Option<SystemThemeMode> {
+    match value {
+        Some("dark") => Some(SystemThemeMode::Dark),
+        Some("light") => Some(SystemThemeMode::Light),
+        _ => None,
+    }
+}
+
+fn background_luminance(value: Option<&str>) -> Option<u16> {
+    let value = value?;
+    if value.len() != 7 || !value.starts_with('#') {
         return None;
     }
-    let value = &raw[quote.len_utf8()..];
-    let end = value.find(quote)?;
-    Some(value[..end].to_string())
+    Some(
+        u16::from_str_radix(&value[1..3], 16).ok()?
+            + u16::from_str_radix(&value[3..5], 16).ok()?
+            + u16::from_str_radix(&value[5..7], 16).ok()?,
+    )
 }
 
 fn system_theme(path: &Path, mono_font: String) -> Option<SystemTheme> {
     let body = fs::read_to_string(path).ok()?;
     let mut mode = None;
+    let mut theme_type = None;
     let mut colors = BTreeMap::new();
     for line in body.lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')) {
         let Some((key, raw)) = line.split_once('=') else { continue };
         let Some(value) = toml_string(raw) else { continue };
         let key = key.trim();
         if key == "mode" {
-            mode = Some(match value.as_str() {
-                "dark" => SystemThemeMode::Dark,
-                "light" => SystemThemeMode::Light,
-                _ => return None,
-            });
+            mode = Some(value);
         } else {
+            if key == "theme_type" {
+                theme_type = Some(value.clone());
+            }
             colors.insert(key.to_string(), value);
         }
     }
-    Some(SystemTheme { mode: mode?, colors, mono_font })
+    let mode = theme_mode(mode.as_deref())
+        .or_else(|| theme_mode(theme_type.as_deref()))
+        .or_else(|| {
+            let light_marker = path.parent().is_some_and(|parent| parent.join("light.mode").is_file());
+            if light_marker {
+                Some(SystemThemeMode::Light)
+            } else {
+                background_luminance(colors.get("background").map(String::as_str).filter(|value| value.starts_with('#')))
+                    .map(|luminance| if luminance > 382 { SystemThemeMode::Light } else { SystemThemeMode::Dark })
+            }
+        })
+        .unwrap_or(SystemThemeMode::Dark);
+    Some(SystemTheme { mode, colors, mono_font })
 }
 
 pub struct Settings {
