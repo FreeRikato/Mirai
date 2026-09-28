@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize, Serializer};
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -68,6 +70,22 @@ pub struct TopProc {
     pub cpu: f64,
 }
 
+#[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SystemThemeMode {
+    Dark,
+    Light,
+}
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemTheme {
+    pub mode: SystemThemeMode,
+    pub colors: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mono_font: Option<String>,
+}
+
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Metrics {
@@ -82,6 +100,8 @@ pub struct Metrics {
     pub battery: Option<Battery>,
     pub top_procs: Vec<TopProc>,
     pub failed_services: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system: Option<SystemTheme>,
 }
 
 #[derive(Serialize, Debug, PartialEq)]

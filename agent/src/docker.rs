@@ -160,9 +160,17 @@ mod tests {
             let mut asked = vec![];
             for _ in 0..3 {
                 let (mut conn, _) = listener.accept().unwrap();
+                // Read the whole request head: closing with unread bytes resets the connection and the client sees no reply.
+                let mut req = Vec::new();
                 let mut buf = [0u8; 1024];
-                let n = conn.read(&mut buf).unwrap();
-                let line = String::from_utf8_lossy(&buf[..n]).lines().next().unwrap_or_default().to_string();
+                while !req.windows(4).any(|w| w == b"\r\n\r\n") {
+                    let n = conn.read(&mut buf).unwrap();
+                    if n == 0 {
+                        break;
+                    }
+                    req.extend_from_slice(&buf[..n]);
+                }
+                let line = String::from_utf8_lossy(&req).lines().next().unwrap_or_default().to_string();
                 let body = if line.contains("/containers/json") { LIST.to_string() } else { r#"{"memory_stats":{"usage":2048,"stats":{"inactive_file":1024}}}"#.to_string() };
                 write!(conn, "HTTP/1.0 200 OK\r\nContent-Type: application/json\r\n\r\n{body}").unwrap();
                 asked.push(line);

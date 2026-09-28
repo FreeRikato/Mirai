@@ -1,12 +1,16 @@
-use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{Duration, Instant};
+use std::hash::{Hash, Hasher};
 
 use chrono::{Local, TimeZone};
 use sysinfo::{Components, CpuRefreshKind, DiskRefreshKind, Disks, MemoryRefreshKind, Networks, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind, Users};
+use walkdir::WalkDir;
 
 use crate::processes::{self, RawProcess, by_cpu, round1};
-use crate::schema::{Battery, Cpu, Disk, Info, Io, Mem, Metrics, Port, Service, Temp, TopProc};
+use crate::schema::{Battery, Cpu, Disk, Info, Io, Mem, Metrics, Port, Service, SystemTheme, SystemThemeMode, Temp, TopProc};
 use crate::{VERSION, ports, services, tailscale};
 
 const MIN_REFRESH: Duration = Duration::from_millis(1000);
@@ -108,6 +112,120 @@ impl<T> Timed<T> {
 fn timed<T>(value: T) -> Timed<T> {
     Timed { at: None, value }
 }
+const SYSTEM_THEME_PATH: &str = ".local/state/omarchy/current/theme/colors.toml";
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct FontCache {
+    stamp: u64,
+    family: Option<String>,
+}
+
+fn hash_metadata(path: &Path, hasher: &mut std::collections::hash_map::DefaultHasher) {
+    path.hash(hasher);
+    match fs::metadata(path) {
+        Ok(metadata) => {
+            true.hash(hasher);
+            metadata.len().hash(hasher);
+            metadata.is_dir().hash(hasher);
+            metadata.modified().ok().hash(hasher);
+        }
+        Err(_) => false.hash(hasher),
+    }
+}
+
+fn fontconfig_stamp(home: &Path) -> u64 {
+    let roots = [
+        home.join(".config/fontconfig"),
+        home.join(".fonts.conf"),
+        home.join(".fonts"),
+        home.join(".local/share/fonts"),
+        PathBuf::from("/etc/fonts"),
+    ];
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for root in roots {
+        if root.is_dir() {
+            for entry in WalkDir::new(&root).follow_links(false).sort_by_file_name().into_iter().filter_map(Result::ok) {
+                hash_metadata(entry.path(), &mut hasher);
+            }
+        } else {
+            hash_metadata(&root, &mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+fn monospace_family() -> Option<String> {
+    let output = Command::new("fc-match").args(["monospace", "-f", "%{family}\\n"]).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    stdout.lines().next().and_then(|line| line.split(',').next()).and_then(|family| family.split(':').next()).map(str::trim).filter(|family| !family.is_empty()).map(str::to_string)
+}
+
+fn toml_string(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    let quote = raw.chars().next()?;
+    if quote == '"' || quote == '\'' {
+        let value = &raw[quote.len_utf8()..];
+        let end = value.find(quote)?;
+        return Some(value[..end].to_string());
+    }
+    Some(raw.split('#').next()?.split_whitespace().next()?.to_string())
+}
+
+fn theme_mode(value: Option<&str>) -> Option<SystemThemeMode> {
+    match value {
+        Some("dark") => Some(SystemThemeMode::Dark),
+        Some("light") => Some(SystemThemeMode::Light),
+        _ => None,
+    }
+}
+
+fn background_luminance(value: Option<&str>) -> Option<u16> {
+    let value = value?;
+    if value.len() != 7 || !value.starts_with('#') {
+        return None;
+    }
+    Some(
+        u16::from_str_radix(&value[1..3], 16).ok()?
+            + u16::from_str_radix(&value[3..5], 16).ok()?
+            + u16::from_str_radix(&value[5..7], 16).ok()?,
+    )
+}
+
+fn system_theme(path: &Path, mono_font: Option<String>) -> Option<SystemTheme> {
+    let body = fs::read_to_string(path).ok()?;
+    let mut mode = None;
+    let mut theme_type = None;
+    let mut colors = BTreeMap::new();
+    for line in body.lines().map(str::trim).filter(|line| !line.is_empty() && !line.starts_with('#')) {
+        let Some((key, raw)) = line.split_once('=') else { continue };
+        let Some(value) = toml_string(raw) else { continue };
+        let key = key.trim();
+        if key == "mode" {
+            mode = Some(value);
+        } else {
+            if key == "theme_type" {
+                theme_type = Some(value.clone());
+            }
+            colors.insert(key.to_string(), value);
+        }
+    }
+    let mode = theme_mode(mode.as_deref())
+        .or_else(|| theme_mode(theme_type.as_deref()))
+        .or_else(|| {
+            let light_marker = path.parent().is_some_and(|parent| parent.join("light.mode").is_file());
+            if light_marker {
+                Some(SystemThemeMode::Light)
+            } else {
+                background_luminance(colors.get("background").map(String::as_str).filter(|value| value.starts_with('#')))
+                    .map(|luminance| if luminance > 382 { SystemThemeMode::Light } else { SystemThemeMode::Dark })
+            }
+        })
+        .unwrap_or(SystemThemeMode::Dark);
+    Some(SystemTheme { mode, colors, mono_font })
+}
 
 pub struct Settings {
     pub tailscale_bin: String,
@@ -136,6 +254,7 @@ pub struct Sampler {
     services: Timed<Vec<Service>>,
     ps_table: Timed<Vec<RawProcess>>,
     ports: Timed<Vec<Port>>,
+    font: Option<FontCache>,
 }
 
 fn process_kind() -> ProcessRefreshKind {
@@ -172,7 +291,21 @@ impl Sampler {
             services: timed(vec![]),
             ps_table: timed(vec![]),
             ports: timed(vec![]),
+            font: None,
         }
+    }
+    fn system_theme(&mut self) -> Option<SystemTheme> {
+        let path = self.settings.home.join(SYSTEM_THEME_PATH);
+        if !path.is_file() {
+            return None;
+        }
+        let stamp = fontconfig_stamp(&self.settings.home);
+        let reload = self.font.as_ref().is_none_or(|cache| cache.stamp != stamp);
+        if reload {
+            self.font = Some(FontCache { stamp, family: monospace_family() });
+        }
+        let mono_font = self.font.as_ref().and_then(|cache| cache.family.clone());
+        system_theme(&path, mono_font)
     }
 
     pub fn refresh(&mut self) {
@@ -309,6 +442,7 @@ impl Sampler {
             battery,
             top_procs,
             failed_services,
+            system: self.system_theme(),
         }
     }
 }
@@ -316,6 +450,7 @@ impl Sampler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     fn row(device: &str, fs_type: &str, mount: &str, size: u64, used: u64) -> DiskRow {
         DiskRow { device: device.into(), fs_type: fs_type.into(), mount: mount.into(), size, used }
@@ -350,5 +485,42 @@ mod tests {
     fn cpu_models_lose_trademark_noise_and_the_clock_suffix() {
         assert_eq!(clean_cpu_model("Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz"), "Intel Core i7-10750H");
         assert_eq!(clean_cpu_model("Apple M5"), "Apple M5");
+    }
+
+    #[test]
+    fn system_theme_resolves_omarchy_mode_fallbacks_without_dropping_colors() {
+        let cases = [
+            ("mode = \"light\"\ntheme_type = \"dark\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("theme_type = \"light\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("mode = \"unknown\"\ntheme_type = \"light\"\nbackground = \"#000000\"\n", false, SystemThemeMode::Light),
+            ("background = \"#000000\"\n", true, SystemThemeMode::Light),
+            ("background = \"#ffffff\"\n", false, SystemThemeMode::Light),
+            ("background = \"#7f7f7f\"\n", false, SystemThemeMode::Dark),
+            ("accent = \"#123456\"\n", false, SystemThemeMode::Dark),
+        ];
+
+        for (body, light_marker, expected) in cases {
+            let dir = tempdir().expect("theme directory");
+            let path = dir.path().join("colors.toml");
+            fs::write(&path, body).expect("colors.toml");
+            if light_marker {
+                fs::write(dir.path().join("light.mode"), "").expect("light.mode");
+            }
+
+            let theme = system_theme(&path, Some("Mono".into())).expect("colors.toml always reports system");
+            assert_eq!(theme.mode, expected, "mode for {body:?}");
+            assert_eq!(theme.colors.get("accent").map(String::as_str), body.contains("accent =").then_some("#123456"), "colors remain present");
+        }
+    }
+
+    #[test]
+    fn system_theme_does_not_strip_a_utf8_bom_before_the_mode_key() {
+        let dir = tempdir().expect("theme directory");
+        let path = dir.path().join("colors.toml");
+        fs::write(&path, "\u{feff}mode = \"light\"\nbackground = \"#000000\"\n").expect("colors.toml");
+
+        let theme = system_theme(&path, Some("Mono".into())).expect("colors.toml always reports system");
+        assert_eq!(theme.mode, SystemThemeMode::Dark);
+        assert_eq!(theme.colors.get("background").map(String::as_str), Some("#000000"));
     }
 }
