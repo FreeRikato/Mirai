@@ -28,11 +28,11 @@ export function ModuleNav({ className, onNavigate }: { className?: string; onNav
               navigate(href);
               onNavigate?.();
             }}
-            className={cn("flex h-full items-center gap-1.5 border-b-2 text-[12px] no-underline", active ? "border-fg font-semibold text-fg" : "border-transparent text-dim hover:text-fg")}
+            className={cn("flex h-full items-center gap-1.5 border-b-2 text-[12px] no-underline", active ? "border-active font-semibold text-active" : "border-transparent text-dim hover:text-fg")}
           >
             {m.label}
             {m.id === "ship" && waiting > 0 && (
-              <span aria-label={`${waiting} waiting on you`} className="text-[10px] font-normal text-fg">
+              <span aria-label={`${waiting} waiting on you`} className="text-[10px] font-normal text-active">
                 {waiting}
               </span>
             )}

@@ -1,8 +1,9 @@
 import { hostname, homedir } from "node:os";
 import { resolve } from "node:path";
 import { serve, type BunRequest, type Server, type ServerWebSocket } from "bun";
+import { z } from "zod";
 import index from "./index.html";
-import { ClientMessageSchema, KillRequestSchema, type ServerMessage } from "@/shared/schema";
+import { ClientMessageSchema, DesktopMessageSchema, KillRequestSchema, type ServerMessage } from "@/shared/schema";
 import { openDb } from "@/hub/db";
 import { isLoadRange, loadStrip } from "@/hub/history";
 import { loadConfig } from "@/hub/config";
@@ -24,8 +25,7 @@ import { createProjects } from "@/hub/projects/service";
 import { createStatsRoutes } from "@/hub/stats/routes";
 import { createAiStats } from "@/hub/stats/service";
 import { createMirai } from "@/hub/mirai/routes";
-
-type SocketData = { watching: string | null };
+type SocketData = { watching: string | null; desktopMachine: string | null };
 
 const config = loadConfig();
 const production = process.env.NODE_ENV === "production";
@@ -55,6 +55,12 @@ const setWatch = (ws: ServerWebSocket<SocketData>, name: string | null) => {
     ws.subscribe(`host:${name}`);
     watchers.set(name, (watchers.get(name) ?? 0) + 1);
   }
+};
+const setDesktop = (ws: ServerWebSocket<SocketData>, machine: string | null) => {
+  const prev = ws.data.desktopMachine;
+  if (prev) ws.unsubscribe(`desktop:${prev}`);
+  ws.data.desktopMachine = machine;
+  if (machine) ws.subscribe(`desktop:${machine}`);
 };
 
 const hub = createHub({
@@ -136,6 +142,32 @@ const server = serve<SocketData>({
       "/api/settings": () => Response.json(config.settings),
       "/api/fleet": () => Response.json(hub.fleet()),
       "/api/events": () => Response.json(hub.recentEvents()),
+      "/api/desktop/open": {
+        POST: async (req: BunRequest) => {
+          const r = await readWrite(req, z.object({ machine: z.string().min(1), path: z.string() }), "{ machine, path }");
+          if (!r.ok) return r.res;
+          const requestUrl = new URL(req.url);
+          if (req.headers.get("origin") !== null && req.headers.get("origin") !== requestUrl.origin) {
+            return Response.json({ error: "writes need a same-origin JSON request" }, { status: 403 });
+          }
+          if (!r.body.path.startsWith("/") || r.body.path.startsWith("//")) {
+            return Response.json({ error: "path must be an absolute path on the hub" }, { status: 400 });
+          }
+          let target: URL;
+          try {
+            target = new URL(r.body.path, requestUrl);
+          } catch {
+            return Response.json({ error: "path must be an absolute path on the hub" }, { status: 400 });
+          }
+          if (target.origin !== requestUrl.origin) {
+            return Response.json({ error: "path must be an absolute path on the hub" }, { status: 400 });
+          }
+          const topic = `desktop:${r.body.machine}`;
+          const delivered = server.subscriberCount(topic);
+          server.publish(topic, JSON.stringify({ type: "open", path: r.body.path } satisfies ServerMessage));
+          return Response.json({ delivered });
+        },
+      },
       "/api/projects": async () => Response.json(await projects.fresh()),
       "/api/load": (req: BunRequest) => {
         const range = new URL(req.url).searchParams.get("range");
@@ -161,7 +193,7 @@ const server = serve<SocketData>({
       ...createStatsRoutes(aiStats),
       ...mirai.routes,
     }),
-    "/ws": (req: BunRequest, srv: Server<SocketData>) => (srv.upgrade(req, { data: { watching: null } }) ? undefined : new Response("upgrade failed", { status: 400 })),
+    "/ws": (req: BunRequest, srv: Server<SocketData>) => (srv.upgrade(req, { data: { watching: null, desktopMachine: null } }) ? undefined : new Response("upgrade failed", { status: 400 })),
   },
   websocket: {
     open(ws) {
@@ -178,6 +210,11 @@ const server = serve<SocketData>({
       } catch {
         return;
       }
+      const desktop = DesktopMessageSchema.safeParse(body);
+      if (desktop.success) {
+        setDesktop(ws, desktop.data.machine);
+        return;
+      }
       const parsed = ClientMessageSchema.safeParse(body);
       if (!parsed.success) return;
       const { fleet, host } = parsed.data;
@@ -191,6 +228,7 @@ const server = serve<SocketData>({
     },
     close(ws) {
       setWatch(ws, null);
+      setDesktop(ws, null);
     },
   },
   development: !production && { hmr: true, console: true },

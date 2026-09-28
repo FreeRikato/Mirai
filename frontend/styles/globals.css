@@ -4,31 +4,34 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-bg: #000000;
-  --color-fg: #ffffff;
-  --color-dim: #8c8c8c;
-  --color-rule: #1e1e1e;
-  --color-track: #161616;
-  --color-raise: #0e0e0e;
-  --color-bad: #ff5a4e;
-  --color-warn: #f4b63f;
-  --color-ok: #5fd08a;
-    --color-faint: #3a3a3a;
-  --color-soft: #cfcfcf;
-    --color-sunk: #050505;
-  --color-hover: #080808;
-  --color-lift: #141414;
-  --color-drop: #0a0804;
-    --color-link: #7fa7ff;
+  --color-bg: var(--mirai-bg, #000000);
+  --color-fg: var(--mirai-fg, #ffffff);
+  --color-dim: var(--mirai-dim, #8c8c8c);
+  --color-rule: var(--mirai-rule, #1e1e1e);
+  --color-track: var(--mirai-track, #161616);
+  --color-raise: var(--mirai-raise, #0e0e0e);
+  --color-bad: var(--mirai-bad, #ff5a4e);
+  --color-warn: var(--mirai-warn, #f4b63f);
+  --color-ok: var(--mirai-ok, #5fd08a);
+  --color-faint: var(--mirai-faint, #3a3a3a);
+  --color-soft: var(--mirai-soft, #cfcfcf);
+  --color-sunk: var(--mirai-sunk, #050505);
+  --color-hover: var(--mirai-hover, #080808);
+  --color-lift: var(--mirai-lift, #141414);
+  --color-drop: var(--mirai-drop, #0a0804);
+  --color-link: var(--mirai-link, #7fa7ff);
+  --color-selection: var(--color-fg);
+  --color-active: var(--mirai-active, #ffffff);
+  --color-focus: var(--mirai-focus, #3a3a3a);
 
-  --font-mono: "Martian Mono", ui-monospace, monospace;
+  --font-mono: var(--mirai-font-mono, "Martian Mono", ui-monospace, monospace);
   --font-dot: "Doto", "Martian Mono", monospace;
   --font-key: "Inter", system-ui, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
 
   --color-background: var(--color-bg);
   --color-foreground: var(--color-fg);
-  --color-popover: #0a0a0a;
+  --color-popover: var(--mirai-popover, #0a0a0a);
   --color-popover-foreground: var(--color-fg);
   --color-primary: var(--color-fg);
   --color-primary-foreground: var(--color-bg);
@@ -36,12 +39,12 @@
   --color-secondary-foreground: var(--color-fg);
   --color-muted: var(--color-track);
   --color-muted-foreground: var(--color-dim);
-  --color-accent: #161616;
+  --color-accent: var(--mirai-accent, #161616);
   --color-accent-foreground: var(--color-fg);
   --color-destructive: var(--color-bad);
   --color-border: var(--color-rule);
   --color-input: var(--color-rule);
-  --color-ring: #3a3a3a;
+  --color-ring: var(--mirai-ring, #3a3a3a);
 
   --radius-sm: 0px;
   --radius-md: 0px;
@@ -74,7 +77,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring;
+    @apply border-border outline-focus;
     scrollbar-width: none;
   }
   ::-webkit-scrollbar {
@@ -87,7 +90,8 @@
     @apply m-0 bg-bg font-mono text-[11px] text-fg antialiased;
   }
   ::selection {
-    @apply bg-fg text-bg;
+    background: var(--color-selection, var(--color-fg));
+    color: var(--color-bg);
   }
 }
 

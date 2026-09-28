@@ -458,6 +458,11 @@ export function MirAISidebar() {
   const setOpen = useUi(s => s.setMirAIOpen);
   const desktop = useIsDesktop();
 
+  useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="ask mirAI"]')?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
   if (desktop) {
     return open ? (
       <SidePanel id="mirai" label="mirAI" className="flex">

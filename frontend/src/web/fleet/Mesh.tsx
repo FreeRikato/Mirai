@@ -97,7 +97,7 @@ export function Mesh() {
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke={relay ? "var(--color-warn)" : "var(--color-fg)"}
+              stroke={relay ? "var(--color-warn)" : "var(--color-active)"}
               strokeWidth={relay ? 1 : 2}
               opacity={focus === null || touches(e) ? 1 : 0.2}
             />
