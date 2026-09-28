@@ -36,4 +36,31 @@ describe("light System theme surfaces", () => {
     expect(source).not.toContain("text-[#e6e6e6]");
     expect(source).not.toContain("border-[#2a2a2a]");
   });
+
+  test("keeps desktop surfaces on resolved System theme colors", async () => {
+    const files = await Promise.all(
+      [
+        "./later/Reader.tsx",
+        "./later/OpenWith.tsx",
+        "./notes/GraphCanvas.tsx",
+        "./notes/NotesGraph.tsx",
+        "./notes/graph.ts",
+        "./ship/review/DiffView.tsx",
+        "./ship/GithubHtml.tsx",
+      ].map(path => Bun.file(new URL(path, import.meta.url)).text()),
+    );
+    const [reader, openWith, graphCanvas, notesGraph, graph, diff, github] = files;
+    expect(reader).toContain("systemThemeValue");
+    expect(openWith).toContain("bg-popover");
+    expect(notesGraph).toContain("data-[selected=true]:bg-accent");
+    expect(notesGraph).not.toMatch(/text-\[#(?:a6a6a6|d9d9d9)\]/);
+    expect(graphCanvas).toContain('systemThemeValue("--color-fg"');
+    expect(graphCanvas).toContain('systemThemeValue("--color-soft"');
+    expect(graph).toContain('systemThemeValue("--color-soft"');
+    expect(diff).toContain("color-mix(in srgb, var(--color-ok)");
+    expect(diff).toContain("color-mix(in srgb, var(--color-bad)");
+    expect(diff).toContain("color-mix(in srgb, var(--color-link)");
+    expect(github).toContain('systemThemeValue("--color-bg"');
+    expect(github).toContain('systemThemeValue("--color-fg"');
+  });
 });
