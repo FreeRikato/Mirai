@@ -84,8 +84,7 @@ import sys
 
 with open(sys.argv[1], encoding="utf-8") as handle:
     text = handle.read()
-text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
-text = re.sub(r"//[^\n]*", "", text)
+# Only the empty skeleton Mirai wrote may go: a user comment keeps the file.
 sys.exit(0 if re.sub(r"\s+", "", text) in ("{}", "") else 1)
 PY
     then
@@ -193,7 +192,28 @@ block = [f"// {begin}"]
 for key, value in entries:
     block.append(f"  {json.dumps(key)}: {json.dumps(value, ensure_ascii=False)},")
 block.append(f"// {end}")
-position = text.find("{")
+def object_brace(source):
+    # The first brace outside comments and strings: a leading comment may mention one.
+    i, n = 0, len(source)
+    while i < n:
+        if source.startswith("//", i):
+            i = source.find("\n", i)
+            i = n if i < 0 else i
+        elif source.startswith("/*", i):
+            i = source.find("*/", i + 2)
+            i = n if i < 0 else i + 2
+        elif source[i] == '"':
+            i += 1
+            while i < n and source[i] != '"':
+                i += 2 if source[i] == "\\" else 1
+            i += 1
+        elif source[i] == "{":
+            return i
+        else:
+            i += 1
+    return -1
+
+position = object_brace(text)
 if position < 0:
     raise SystemExit(f"{path} is not a JSONC object")
 insert_at = position + 1
