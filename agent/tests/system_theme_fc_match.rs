@@ -36,6 +36,12 @@ fn write(path: &Path, body: &str) {
 }
 
 fn start() -> Agent {
+    start_with_fc_match(
+        "#!/bin/sh\nif [ \"$1\" = \"monospace\" ] && [ \"$2\" = \"-f\" ] && [ \"$3\" = \"%{family}\\\\n\" ]; then\n  printf '%s\\n' 'JetBrainsMono Nerd Font,JetBrainsMono NF'\nelse\n  printf '%s\\n' 'JetBrainsMonoNerdFont-Regular.ttf: \"JetBrainsMono Nerd Font\" \"Regular\"'\nfi\n",
+    )
+}
+
+fn start_with_fc_match(fc_match: &str) -> Agent {
     let home = tempfile::tempdir().expect("temp home");
     let bin = tempfile::tempdir().expect("temp bin");
     write(
@@ -47,11 +53,7 @@ fn start() -> Agent {
         "<fontconfig><match><edit name=\"family\"><string>JetBrainsMono Nerd Font</string></edit></match></fontconfig>\n",
     );
     let script = bin.path().join("fc-match");
-    fs::write(
-        &script,
-        "#!/bin/sh\nif [ \"$1\" = \"monospace\" ] && [ \"$2\" = \"-f\" ] && [ \"$3\" = \"%{family}\\\\n\" ]; then\n  printf '%s\\n' 'JetBrainsMono Nerd Font,JetBrainsMono NF'\nelse\n  printf '%s\\n' 'JetBrainsMonoNerdFont-Regular.ttf: \"JetBrainsMono Nerd Font\" \"Regular\"'\nfi\n",
-    )
-    .expect("write fc-match stub");
+    fs::write(&script, fc_match).expect("write fc-match stub");
     fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).expect("chmod fc-match stub");
 
     let port = free_port();
@@ -79,6 +81,14 @@ fn start() -> Agent {
         sleep(Duration::from_millis(100));
     }
     panic!("mirai-agent did not come up on {}", agent.base);
+}
+
+#[test]
+fn failed_fc_match_omits_monospace_font() {
+    let agent = start_with_fc_match("#!/bin/sh\nexit 1\n");
+    let body = metrics(&agent);
+    let system = body["system"].as_object().expect("system theme");
+    assert!(!system.contains_key("monoFont"));
 }
 
 fn metrics(agent: &Agent) -> Value {
