@@ -87,11 +87,12 @@ export function systemThemeVars(theme: SystemTheme): Record<string, string> {
   const colors = theme.colors;
   const pick = (key: string, fallback: string) => colors[key] ?? fallback;
   const status = STATUS[theme.mode];
+  const fg = pick("foreground", BUILT_IN.fg);
   const vars: Record<string, string> = {
     "--color-bg": pick("background", BUILT_IN.bg),
-    "--color-fg": pick("foreground", BUILT_IN.fg),
+    "--color-fg": fg,
     "--color-link": pick("accent", BUILT_IN.link),
-    "--color-selection": pick("selection", BUILT_IN.selection),
+    "--color-selection": pick("selection", fg),
     "--color-active": "var(--color-link)",
     "--color-focus": "var(--color-link)",
     "--color-ok": status.ok,

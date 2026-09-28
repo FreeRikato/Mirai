@@ -91,7 +91,7 @@
   }
   ::selection {
     background: var(--color-selection, var(--color-fg));
-    color: var(--color-bg);
+    color: var(--color-fg);
   }
 }
 
