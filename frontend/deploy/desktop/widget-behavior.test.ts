@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const QML = readFileSync(join(import.meta.dir, "desktop/Fleet.qml"), "utf8");
+const QML = readFileSync(join(import.meta.dir, "Fleet.qml"), "utf8");
 
 test("Fleet QML renders the table popup and actionable critical notifications", () => {
   expect(QML).toContain('PopupCard {');

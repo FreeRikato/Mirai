@@ -3,7 +3,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const ROOT = join(import.meta.dir, "..");
+const ROOT = join(import.meta.dir, "../..");
 const SCRIPT = join(ROOT, "deploy/install-desktop.sh");
 
 test("copies desktop assets into the directory the remote installer reads", async () => {

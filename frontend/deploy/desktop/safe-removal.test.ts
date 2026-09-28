@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "n
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const ROOT = join(import.meta.dir, "..");
+const ROOT = join(import.meta.dir, "../..");
 const SCRIPT = join(ROOT, "deploy/install-desktop.sh");
 
 test("removal preserves user edits made after installation", async () => {

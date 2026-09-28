@@ -3,7 +3,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "n
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const ROOT = join(import.meta.dir, "..");
+const ROOT = join(import.meta.dir, "../..");
 const SCRIPT = join(ROOT, "deploy/install-desktop.sh");
 const QML = join(ROOT, "deploy/desktop/Fleet.qml");
 
