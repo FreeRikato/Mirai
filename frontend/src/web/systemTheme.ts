@@ -1,5 +1,5 @@
 import type { Metrics } from "@/shared/schema";
-
+import { useUi } from "./store";
 export type SystemTheme = NonNullable<Metrics["system"]>;
 
 const BUILT_IN = {
@@ -156,4 +156,5 @@ export function applySystemTheme(theme: SystemTheme | undefined): void {
   } else {
     root.style.colorScheme = "dark";
   }
+  useUi.getState().bumpThemeVersion();
 }

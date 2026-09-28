@@ -1,6 +1,7 @@
 import type { MermaidConfig } from "mermaid";
 import { useEffect, useMemo, useRef } from "react";
 import { createSanitizer } from "../safeHtml";
+import { useUi } from "../store";
 import { systemThemeValue } from "../systemTheme";
 
 const sanitizeGithubHtml = createSanitizer("https://github.com");
@@ -85,8 +86,8 @@ async function renderMermaidBlocks(root: HTMLElement, isStale: () => boolean) {
 
 export function GithubHtml({ html }: { html: string }) {
   const clean = useMemo(() => sanitizeGithubHtml(html), [html]);
+  const themeVersion = useUi(state => state.themeVersion);
   const ref = useRef<HTMLDivElement>(null);
-  const themeKey = JSON.stringify(mermaidTheme());
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
@@ -95,6 +96,6 @@ export function GithubHtml({ html }: { html: string }) {
     return () => {
       stale = true;
     };
-  }, [clean, themeKey]);
+  }, [clean, themeVersion]);
   return <div ref={ref} className="gh-body" dangerouslySetInnerHTML={{ __html: clean }} />;
 }
