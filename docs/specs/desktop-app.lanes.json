@@ -1,0 +1,8 @@
+[
+  {"id": "agent-system-theme", "repo": "mirai", "branch": "feat/agent-system-theme", "title": "Report the Omarchy System theme from mirai-agent",
+   "dependsOn": [], "fence": ["agent/**"], "live": false},
+  {"id": "hub-web-desktop", "repo": "mirai", "branch": "feat/desktop-app", "title": "Desktop app mode: System theme, mirAI deep link and open relay",
+   "dependsOn": [], "fence": ["frontend/src/hub/**", "frontend/src/web/**", "frontend/src/shared/**", "frontend/src/index.ts", "frontend/src/*.tsx", "frontend/src/*.html", "frontend/styles/**", "frontend/e2e/**"], "live": false},
+  {"id": "omarchy-integration", "repo": "mirai", "branch": "feat/omarchy-integration", "title": "Install Mirai into Omarchy: web app, bindings, bar widget, menu",
+   "dependsOn": ["hub-web-desktop"], "fence": ["frontend/deploy/install-desktop.sh", "frontend/deploy/desktop/**", "frontend/src/doctor/**"], "live": false}
+]

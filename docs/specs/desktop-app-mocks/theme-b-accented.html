@@ -1,0 +1,186 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Doto:wght@700&family=JetBrains+Mono:wght@400;700&display=swap"><title>Mirai theme B. Accented</title><style>
+:root{color-scheme:dark}
+body{margin:0;background:#000;color:#fff;font:13px/1.45 "JetBrains Mono",ui-monospace,monospace;padding:16px}
+.intro{max-width:1180px;margin:0 auto 20px}.intro h2{margin:0 0 4px;font-size:15px}.intro p{margin:0;color:#aaa}
+.frame{max-width:1180px;margin:0 auto 28px;background:var(--bg);color:var(--fg);border:1px solid #333}
+.label{padding:4px 10px;font-size:11px;background:#111;color:#bbb}
+nav{display:flex;gap:18px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+nav a{color:var(--dim);padding-bottom:3px}nav a.on{color:var(--hi);border-bottom:2px solid var(--hi)}
+.logo{font-family:Doto,monospace;font-size:18px;letter-spacing:1px}
+.badge{color:var(--hi)}
+.search{margin-left:auto;border:1px solid var(--rule);padding:3px 10px;color:var(--dim)}
+.b-accented .search,.c-tinted .search{}
+kbd{font:inherit;color:var(--faint);margin-left:24px}
+.body{display:grid;grid-template-columns:230px 1fr}
+aside{border-right:1px solid var(--rule)}
+.fleet{padding:10px 14px;background:var(--raise);border-bottom:1px solid var(--rule)}
+.m{padding:8px 14px;border-bottom:1px solid var(--rule)}
+.row{display:flex;justify-content:space-between}
+.bar{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:6px}
+.bar i{height:3px;background:var(--track);display:block}.bar b{display:block;height:3px}
+.dim{color:var(--dim)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+main{padding:14px 20px;min-width:0}
+h1{font-family:Doto,monospace;font-size:44px;margin:0;line-height:1}
+a{color:var(--link);text-decoration:none;cursor:pointer}
+.split{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:12px 0;padding:10px 0}
+svg{width:100%;height:auto}.edge{stroke:var(--hi);stroke-width:1.5}.dashed{stroke:var(--warn);stroke-dasharray:4 4}
+.nm{fill:var(--fg);font:14px Doto,monospace;text-anchor:middle}.ms{fill:var(--soft);font-size:10px;text-anchor:middle}
+.events{border-left:1px solid var(--rule);padding-left:14px}
+.ev{display:grid;grid-template-columns:44px 14px 1fr;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule)}
+table{width:100%;border-collapse:collapse}td{padding:5px 6px;border-bottom:1px solid var(--rule)}
+tr.hd td{color:var(--dim);font-size:11px}tr.sel td{background:var(--sel)}
+.sw{display:inline-block;width:6px;height:12px;margin-right:8px;vertical-align:-1px}
+@media (max-width:760px){.body{grid-template-columns:1fr}aside{display:none}.split{grid-template-columns:1fr}.events{border:0;padding:0}}
+</style></head>
+<body class=b-accented><div class=intro><h2>B. Accented</h2><p>Everything in A, plus accent on the active nav tab, the ship badge, the palette border, graph edges and the selected table row. Status dots (ok, warn, bad) are Mirai's own in every theme; Latte uses the darker light-mode set. Mono font is the system font (JetBrains Mono).</p></div>
+<section class=frame style="--bg:#000000;--fg:#fefefe;--dim:color-mix(in srgb, #fefefe 58%, #000000);--soft:color-mix(in srgb, #fefefe 82%, #000000);--faint:color-mix(in srgb, #fefefe 26%, #000000);--rule:color-mix(in srgb, #fefefe 14%, #000000);--track:color-mix(in srgb, #fefefe 10%, #000000);--raise:color-mix(in srgb, #fefefe 6%, #000000);--link:#ac637f;--ok:#5fd08a;--warn:#f4b63f;--bad:#ff5a4e;--hi:#ac637f;--sel:#1a1a1a;--m1:#ac637f;--m2:#ea8896;--m3:#ffc668;--m4:#cd9189;--m5:#cb7194;--m6:#ff93a6;--m7:#ffd85d;--m8:#7b5752">
+  <div class=label>Berserk · dark</div>
+  <nav><b class=logo>mirai</b><a class=on>machines</a><a>projects</a><a>tasks</a><a>ship <span class=badge>9</span></a><a>content</a><a>notes</a><a>stats</a>
+    <span class=search>search or ask mirAI <kbd>⌘K</kbd></span></nav>
+  <div class=body>
+    <aside><div class=fleet><div class=row><b>fleet</b><span class=dim>4/4</span></div>
+      <div><span class=dot style="background:var(--m1)"></span><span class=dot style="background:var(--m2)"></span><span class=dot style="background:var(--m3)"></span><span class=dot style="background:var(--m4)"></span></div></div>
+      <div class=m><div class=row><span style="color:var(--m1)">archikato</span><span class=dim>12%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:12%;background:var(--m1)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:71%;background:var(--m1)"></b></i></div>
+        <div class=dim>temp 54°C · disk 62%</div></div>
+      <div class=m><div class=row><span style="color:var(--m2)">omarikato</span><span class=dim>4%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:4%;background:var(--m2)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:38%;background:var(--m2)"></b></i></div>
+        <div class=dim>temp 81°C · disk 44%</div></div>
+      <div class=m><div class=row><span style="color:var(--m3)">macato</span><span class=dim>9%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:9%;background:var(--m3)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:55%;background:var(--m3)"></b></i></div>
+        <div class=dim>temp -- · disk 71%</div></div>
+      <div class=m><div class=row><span style="color:var(--m4)">homelab</span><span class=dim>22%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:22%;background:var(--m4)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:64%;background:var(--m4)"></b></i></div>
+        <div class=dim>temp 49°C · disk 88%</div></div></aside>
+    <main>
+      <h1>fleet</h1><div class=dim>tail613164.ts.net · 4 machines · 4 online · refreshed now · <a>open tailnet admin</a></div>
+      <div class=split>
+        <svg viewBox="0 0 420 190">
+          <line x1=70 y1=40 x2=210 y2=150 class=edge /><line x1=350 y1=40 x2=210 y2=150 class=edge /><line x1=70 y1=40 x2=350 y2=40 class="edge dashed" />
+          <circle cx=70 cy=40 r=7 style="fill:var(--m1)"/><circle cx=350 cy=40 r=7 style="fill:var(--m2)"/><circle cx=210 cy=150 r=7 style="fill:var(--m3)"/>
+          <text x=70 y=22 class=nm>archikato</text><text x=350 y=22 class=nm>omarikato</text><text x=210 y=178 class=nm>macato</text>
+          <text x=140 y=100 class=ms>1 ms</text><text x=285 y=100 class=ms>2 ms</text><text x=210 y=34 class=ms>derp</text>
+        </svg>
+        <div class=events><b>events</b>
+          <div class=ev><span class=dim>12:04</span><span class=dot style="background:var(--bad)"></span>omarikato temp crossed 80°C</div>
+          <div class=ev><span class=dim>11:52</span><span class=dot style="background:var(--warn)"></span>homelab disk at 88%</div>
+          <div class=ev><span class=dim>11:40</span><span class=dot style="background:var(--ok)"></span>macato came online</div>
+        </div>
+      </div>
+      <table><tr class=hd><td>machine</td><td>os</td><td>cpu</td><td>mem</td><td>temp</td><td>disk</td><td>state</td></tr><tr class=""><td><span class=sw style="background:var(--m1)"></span>archikato</td>
+        <td>linux</td><td>12%</td><td>71%</td><td>54°</td><td>62%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class="sel"><td><span class=sw style="background:var(--m2)"></span>omarikato</td>
+        <td>linux</td><td>4%</td><td>38%</td><td>81°</td><td>44%</td>
+        <td><span class=dot style="background:var(--bad)"></span>bad</td></tr><tr class=""><td><span class=sw style="background:var(--m3)"></span>macato</td>
+        <td>linux</td><td>9%</td><td>55%</td><td>--</td><td>71%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class=""><td><span class=sw style="background:var(--m4)"></span>homelab</td>
+        <td>linux</td><td>22%</td><td>64%</td><td>49°</td><td>88%</td>
+        <td><span class=dot style="background:var(--warn)"></span>warn</td></tr></table>
+    </main>
+  </div>
+</section>
+<section class=frame style="--bg:#1a1b26;--fg:#a9b1d6;--dim:color-mix(in srgb, #a9b1d6 58%, #1a1b26);--soft:color-mix(in srgb, #a9b1d6 82%, #1a1b26);--faint:color-mix(in srgb, #a9b1d6 26%, #1a1b26);--rule:color-mix(in srgb, #a9b1d6 14%, #1a1b26);--track:color-mix(in srgb, #a9b1d6 10%, #1a1b26);--raise:color-mix(in srgb, #a9b1d6 6%, #1a1b26);--link:#7aa2f7;--ok:#5fd08a;--warn:#f4b63f;--bad:#ff5a4e;--hi:#7aa2f7;--sel:#292e42;--m1:#7aa2f7;--m2:#ad8ee6;--m3:#449dab;--m4:#eb927b;--m5:#7da6ff;--m6:#bb9af7;--m7:#0db9d7;--m8:#75493d">
+  <div class=label>Tokyo Night · dark</div>
+  <nav><b class=logo>mirai</b><a class=on>machines</a><a>projects</a><a>tasks</a><a>ship <span class=badge>9</span></a><a>content</a><a>notes</a><a>stats</a>
+    <span class=search>search or ask mirAI <kbd>⌘K</kbd></span></nav>
+  <div class=body>
+    <aside><div class=fleet><div class=row><b>fleet</b><span class=dim>4/4</span></div>
+      <div><span class=dot style="background:var(--m1)"></span><span class=dot style="background:var(--m2)"></span><span class=dot style="background:var(--m3)"></span><span class=dot style="background:var(--m4)"></span></div></div>
+      <div class=m><div class=row><span style="color:var(--m1)">archikato</span><span class=dim>12%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:12%;background:var(--m1)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:71%;background:var(--m1)"></b></i></div>
+        <div class=dim>temp 54°C · disk 62%</div></div>
+      <div class=m><div class=row><span style="color:var(--m2)">omarikato</span><span class=dim>4%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:4%;background:var(--m2)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:38%;background:var(--m2)"></b></i></div>
+        <div class=dim>temp 81°C · disk 44%</div></div>
+      <div class=m><div class=row><span style="color:var(--m3)">macato</span><span class=dim>9%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:9%;background:var(--m3)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:55%;background:var(--m3)"></b></i></div>
+        <div class=dim>temp -- · disk 71%</div></div>
+      <div class=m><div class=row><span style="color:var(--m4)">homelab</span><span class=dim>22%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:22%;background:var(--m4)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:64%;background:var(--m4)"></b></i></div>
+        <div class=dim>temp 49°C · disk 88%</div></div></aside>
+    <main>
+      <h1>fleet</h1><div class=dim>tail613164.ts.net · 4 machines · 4 online · refreshed now · <a>open tailnet admin</a></div>
+      <div class=split>
+        <svg viewBox="0 0 420 190">
+          <line x1=70 y1=40 x2=210 y2=150 class=edge /><line x1=350 y1=40 x2=210 y2=150 class=edge /><line x1=70 y1=40 x2=350 y2=40 class="edge dashed" />
+          <circle cx=70 cy=40 r=7 style="fill:var(--m1)"/><circle cx=350 cy=40 r=7 style="fill:var(--m2)"/><circle cx=210 cy=150 r=7 style="fill:var(--m3)"/>
+          <text x=70 y=22 class=nm>archikato</text><text x=350 y=22 class=nm>omarikato</text><text x=210 y=178 class=nm>macato</text>
+          <text x=140 y=100 class=ms>1 ms</text><text x=285 y=100 class=ms>2 ms</text><text x=210 y=34 class=ms>derp</text>
+        </svg>
+        <div class=events><b>events</b>
+          <div class=ev><span class=dim>12:04</span><span class=dot style="background:var(--bad)"></span>omarikato temp crossed 80°C</div>
+          <div class=ev><span class=dim>11:52</span><span class=dot style="background:var(--warn)"></span>homelab disk at 88%</div>
+          <div class=ev><span class=dim>11:40</span><span class=dot style="background:var(--ok)"></span>macato came online</div>
+        </div>
+      </div>
+      <table><tr class=hd><td>machine</td><td>os</td><td>cpu</td><td>mem</td><td>temp</td><td>disk</td><td>state</td></tr><tr class=""><td><span class=sw style="background:var(--m1)"></span>archikato</td>
+        <td>linux</td><td>12%</td><td>71%</td><td>54°</td><td>62%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class="sel"><td><span class=sw style="background:var(--m2)"></span>omarikato</td>
+        <td>linux</td><td>4%</td><td>38%</td><td>81°</td><td>44%</td>
+        <td><span class=dot style="background:var(--bad)"></span>bad</td></tr><tr class=""><td><span class=sw style="background:var(--m3)"></span>macato</td>
+        <td>linux</td><td>9%</td><td>55%</td><td>--</td><td>71%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class=""><td><span class=sw style="background:var(--m4)"></span>homelab</td>
+        <td>linux</td><td>22%</td><td>64%</td><td>49°</td><td>88%</td>
+        <td><span class=dot style="background:var(--warn)"></span>warn</td></tr></table>
+    </main>
+  </div>
+</section>
+<section class=frame style="--bg:#eff1f5;--fg:#4c4f69;--dim:color-mix(in srgb, #4c4f69 58%, #eff1f5);--soft:color-mix(in srgb, #4c4f69 82%, #eff1f5);--faint:color-mix(in srgb, #4c4f69 26%, #eff1f5);--rule:color-mix(in srgb, #4c4f69 14%, #eff1f5);--track:color-mix(in srgb, #4c4f69 10%, #eff1f5);--raise:color-mix(in srgb, #4c4f69 6%, #eff1f5);--link:#1e66f5;--ok:#1f8a4c;--warn:#a86400;--bad:#c8302a;--hi:#1e66f5;--sel:#ccd0da;--m1:#1e66f5;--m2:#ea76cb;--m3:#179299;--m4:#d84e2b;--m5:#1e66f5;--m6:#ea76cb;--m7:#179299;--m8:#6c2715">
+  <div class=label>Catppuccin Latte · light</div>
+  <nav><b class=logo>mirai</b><a class=on>machines</a><a>projects</a><a>tasks</a><a>ship <span class=badge>9</span></a><a>content</a><a>notes</a><a>stats</a>
+    <span class=search>search or ask mirAI <kbd>⌘K</kbd></span></nav>
+  <div class=body>
+    <aside><div class=fleet><div class=row><b>fleet</b><span class=dim>4/4</span></div>
+      <div><span class=dot style="background:var(--m1)"></span><span class=dot style="background:var(--m2)"></span><span class=dot style="background:var(--m3)"></span><span class=dot style="background:var(--m4)"></span></div></div>
+      <div class=m><div class=row><span style="color:var(--m1)">archikato</span><span class=dim>12%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:12%;background:var(--m1)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:71%;background:var(--m1)"></b></i></div>
+        <div class=dim>temp 54°C · disk 62%</div></div>
+      <div class=m><div class=row><span style="color:var(--m2)">omarikato</span><span class=dim>4%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:4%;background:var(--m2)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:38%;background:var(--m2)"></b></i></div>
+        <div class=dim>temp 81°C · disk 44%</div></div>
+      <div class=m><div class=row><span style="color:var(--m3)">macato</span><span class=dim>9%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:9%;background:var(--m3)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:55%;background:var(--m3)"></b></i></div>
+        <div class=dim>temp -- · disk 71%</div></div>
+      <div class=m><div class=row><span style="color:var(--m4)">homelab</span><span class=dim>22%</span></div>
+        <div class=bar><span class=dim>cpu</span><i><b style="width:22%;background:var(--m4)"></b></i></div>
+        <div class=bar><span class=dim>mem</span><i><b style="width:64%;background:var(--m4)"></b></i></div>
+        <div class=dim>temp 49°C · disk 88%</div></div></aside>
+    <main>
+      <h1>fleet</h1><div class=dim>tail613164.ts.net · 4 machines · 4 online · refreshed now · <a>open tailnet admin</a></div>
+      <div class=split>
+        <svg viewBox="0 0 420 190">
+          <line x1=70 y1=40 x2=210 y2=150 class=edge /><line x1=350 y1=40 x2=210 y2=150 class=edge /><line x1=70 y1=40 x2=350 y2=40 class="edge dashed" />
+          <circle cx=70 cy=40 r=7 style="fill:var(--m1)"/><circle cx=350 cy=40 r=7 style="fill:var(--m2)"/><circle cx=210 cy=150 r=7 style="fill:var(--m3)"/>
+          <text x=70 y=22 class=nm>archikato</text><text x=350 y=22 class=nm>omarikato</text><text x=210 y=178 class=nm>macato</text>
+          <text x=140 y=100 class=ms>1 ms</text><text x=285 y=100 class=ms>2 ms</text><text x=210 y=34 class=ms>derp</text>
+        </svg>
+        <div class=events><b>events</b>
+          <div class=ev><span class=dim>12:04</span><span class=dot style="background:var(--bad)"></span>omarikato temp crossed 80°C</div>
+          <div class=ev><span class=dim>11:52</span><span class=dot style="background:var(--warn)"></span>homelab disk at 88%</div>
+          <div class=ev><span class=dim>11:40</span><span class=dot style="background:var(--ok)"></span>macato came online</div>
+        </div>
+      </div>
+      <table><tr class=hd><td>machine</td><td>os</td><td>cpu</td><td>mem</td><td>temp</td><td>disk</td><td>state</td></tr><tr class=""><td><span class=sw style="background:var(--m1)"></span>archikato</td>
+        <td>linux</td><td>12%</td><td>71%</td><td>54°</td><td>62%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class="sel"><td><span class=sw style="background:var(--m2)"></span>omarikato</td>
+        <td>linux</td><td>4%</td><td>38%</td><td>81°</td><td>44%</td>
+        <td><span class=dot style="background:var(--bad)"></span>bad</td></tr><tr class=""><td><span class=sw style="background:var(--m3)"></span>macato</td>
+        <td>linux</td><td>9%</td><td>55%</td><td>--</td><td>71%</td>
+        <td><span class=dot style="background:var(--ok)"></span>ok</td></tr><tr class=""><td><span class=sw style="background:var(--m4)"></span>homelab</td>
+        <td>linux</td><td>22%</td><td>64%</td><td>49°</td><td>88%</td>
+        <td><span class=dot style="background:var(--warn)"></span>warn</td></tr></table>
+    </main>
+  </div>
+</section></body></html>
