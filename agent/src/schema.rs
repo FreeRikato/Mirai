@@ -82,7 +82,8 @@ pub enum SystemThemeMode {
 pub struct SystemTheme {
     pub mode: SystemThemeMode,
     pub colors: BTreeMap<String, String>,
-    pub mono_font: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mono_font: Option<String>,
 }
 
 #[derive(Serialize, Debug)]

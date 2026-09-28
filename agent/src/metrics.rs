@@ -117,7 +117,7 @@ const SYSTEM_THEME_PATH: &str = ".local/state/omarchy/current/theme/colors.toml"
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct FontCache {
     stamp: u64,
-    family: String,
+    family: Option<String>,
 }
 
 fn hash_metadata(path: &Path, hasher: &mut std::collections::hash_map::DefaultHasher) {
@@ -154,10 +154,13 @@ fn fontconfig_stamp(home: &Path) -> u64 {
     hasher.finish()
 }
 
-fn monospace_family() -> String {
-    let output = Command::new("fc-match").args(["monospace", "-f", "%{family}\\n"]).output();
-    let stdout = output.ok().filter(|o| o.status.success()).map(|o| String::from_utf8_lossy(&o.stdout).into_owned()).unwrap_or_default();
-    stdout.lines().next().and_then(|line| line.split(',').next()).and_then(|family| family.split(':').next()).map(str::trim).filter(|family| !family.is_empty()).unwrap_or_default().to_string()
+fn monospace_family() -> Option<String> {
+    let output = Command::new("fc-match").args(["monospace", "-f", "%{family}\\n"]).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    stdout.lines().next().and_then(|line| line.split(',').next()).and_then(|family| family.split(':').next()).map(str::trim).filter(|family| !family.is_empty()).map(str::to_string)
 }
 
 fn toml_string(raw: &str) -> Option<String> {
@@ -191,7 +194,7 @@ fn background_luminance(value: Option<&str>) -> Option<u16> {
     )
 }
 
-fn system_theme(path: &Path, mono_font: String) -> Option<SystemTheme> {
+fn system_theme(path: &Path, mono_font: Option<String>) -> Option<SystemTheme> {
     let body = fs::read_to_string(path).ok()?;
     let mut mode = None;
     let mut theme_type = None;
@@ -301,7 +304,7 @@ impl Sampler {
         if reload {
             self.font = Some(FontCache { stamp, family: monospace_family() });
         }
-        let mono_font = self.font.as_ref().map(|cache| cache.family.clone()).unwrap_or_default();
+        let mono_font = self.font.as_ref().and_then(|cache| cache.family.clone());
         system_theme(&path, mono_font)
     }
 
