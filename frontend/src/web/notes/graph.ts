@@ -1,5 +1,4 @@
 import type { NoteMeta } from "@/shared/notes";
-
 export type GraphNode = { id: string; title: string; folder: string; degree: number };
 export type Edge = readonly [string, string];
 export type Graph = { nodes: GraphNode[]; edges: Edge[]; adjacent: ReadonlyMap<string, ReadonlySet<string>> };
@@ -46,7 +45,8 @@ export const backlinksOf = (notes: readonly NoteMeta[], id: string): { id: strin
   notes.flatMap(n => n.links.filter(l => l.to === id).map(l => ({ id: n.id, context: l.context })));
 
 const PALETTE = ["#7fa7ff", "#f4b63f", "#e07bd8", "#4fc8b8", "#a8e06a", "#ff9e7a", "#b69cff", "#6fd3ff", "#f28db2"] as const;
-export const ROOT_COLOR = "#cfcfcf";
+/* A CSS variable rather than a resolved color, so root dots follow a System theme change without refetching the notes. */
+export const ROOT_COLOR = "var(--color-soft)";
 
 export function folderColors(notes: readonly NoteMeta[]): Map<string, string> {
   const counts = new Map<string, number>();

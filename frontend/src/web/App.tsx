@@ -1,11 +1,11 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useFleet, useLiveSocket } from "./api";
 import { FleetView } from "./fleet/FleetView";
 import { HostView } from "./host/HostView";
 import { MirAISidebar } from "./mirai/MirAISidebar";
 import { LinkPeek } from "./peek/LinkPeek";
 import { usePeekLinks } from "./peek/links";
-import { routeHost, usePathname, useRoute, type Route } from "./router";
+import { routeHost, usePathname, useRoute, useSearch, type Route } from "./router";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { CommandPalette } from "./shell/CommandPalette";
 import { NavDrawer, Rail } from "./shell/Rail";
@@ -13,6 +13,7 @@ import { ImageLightbox } from "./shell/ImageLightbox";
 import { TopBar } from "./shell/TopBar";
 import { SettingsGate } from "./settings";
 import { useUi } from "./store";
+import { applySystemTheme, desktopMachineForSearch } from "./systemTheme";
 
 const LaterView = lazy(() => import("./later/LaterView").then(m => ({ default: m.LaterView })));
 const NotesView = lazy(() => import("./notes/NotesView").then(m => ({ default: m.NotesView })));
@@ -69,7 +70,31 @@ function ModuleBody({ route }: { route: Route }) {
 export function App() {
   const route = useRoute();
   const pathname = usePathname();
-  useLiveSocket(routeHost(route), route.module === "machines");
+  const search = useSearch();
+  const [desktopMachine, setDesktopMachine] = useState<string | null>(null);
+  const { data: fleet } = useFleet();
+
+  useEffect(() => {
+    setDesktopMachine(desktopMachineForSearch(search));
+  }, [search]);
+
+  useEffect(() => {
+    const machine = desktopMachine ? fleet?.machines.find(m => m.ts.name === desktopMachine) : undefined;
+    applySystemTheme(machine?.kind === "live" ? machine.metrics.system : undefined);
+  }, [desktopMachine, fleet]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get("mirai") !== "1") return;
+    params.delete("mirai");
+    const next = params.toString();
+    window.history.replaceState(null, "", `${pathname}${next ? `?${next}` : ""}`);
+    useUi.getState().setMirAIOpen(true);
+    const frame = window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="ask mirAI"]')?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname, search]);
+
+  useLiveSocket(routeHost(route), route.module === "machines", desktopMachine);
   useShortcuts();
   usePeekLinks();
   return (

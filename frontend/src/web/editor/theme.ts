@@ -2,15 +2,15 @@ import { EditorView } from "@codemirror/view";
 
 export type EditorVariant = "prose" | "compact";
 
-const FG = "#ffffff";
-const DIM = "#8c8c8c";
-const FAINT = "#3a3a3a";
-const RULE = "#1e1e1e";
-const RAISE = "#0e0e0e";
-const LINK = "#7fa7ff";
-const WARN = "#f4b63f";
-const OK = "#5fd08a";
-const MONO = '"Martian Mono", ui-monospace, monospace';
+const FG = "var(--color-fg)";
+const DIM = "var(--color-dim)";
+const FAINT = "var(--color-faint)";
+const RULE = "var(--color-rule)";
+const RAISE = "var(--color-raise)";
+const LINK = "var(--color-link)";
+const WARN = "var(--color-warn)";
+const OK = "var(--color-ok)";
+const MONO = "var(--font-mono)";
 const SERIF = '"Source Serif 4", Georgia, serif';
 
 const TYPE: Record<EditorVariant, { font: string; size: string; lineHeight: string }> = {
@@ -22,13 +22,13 @@ export function editorTheme(variant: EditorVariant) {
   const t = TYPE[variant];
   return EditorView.theme(
     {
-      "&": { color: "#d9d9d9", backgroundColor: "transparent", fontSize: t.size },
+      "&": { color: FG, backgroundColor: "transparent", fontSize: t.size },
       "&.cm-focused": { outline: "none" },
       ".cm-scroller": { fontFamily: t.font, lineHeight: t.lineHeight, overflow: "visible" },
       ".cm-content": { padding: "0", caretColor: FG },
       ".cm-line": { padding: "0" },
       ".cm-cursor, .cm-dropCursor": { borderLeftColor: FG },
-      ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": { backgroundColor: "#ffffff33" },
+      ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": { backgroundColor: "color-mix(in srgb, var(--color-selection) 20%, transparent)" },
       ".cm-md-h1": { fontSize: "1.7em", fontWeight: "600", color: FG, lineHeight: "1.3" },
       ".cm-md-h2": { fontSize: "1.35em", fontWeight: "600", color: FG, lineHeight: "1.35" },
       ".cm-md-h3": { fontSize: "1.15em", fontWeight: "600", color: FG },
@@ -37,7 +37,7 @@ export function editorTheme(variant: EditorVariant) {
       ".cm-md-em": { fontStyle: "italic" },
       ".cm-md-strike": { textDecoration: "line-through", color: DIM },
       ".cm-md-code": { fontFamily: MONO, fontSize: "0.82em", color: WARN, backgroundColor: RAISE },
-      ".cm-md-codeblock": { fontFamily: MONO, fontSize: "0.8em", backgroundColor: RAISE, color: "#d9d9d9" },
+      ".cm-md-codeblock": { fontFamily: MONO, fontSize: "0.8em", backgroundColor: RAISE, color: FG },
       ".cm-md-fence-mark": { color: FAINT },
       ".cm-md-quote": { borderLeft: `2px solid ${RULE}`, paddingLeft: "12px !important", color: DIM },
       ".cm-md-link": { color: LINK, cursor: "pointer" },
@@ -61,14 +61,14 @@ export function editorTheme(variant: EditorVariant) {
       ".cm-md-task-doing": { color: WARN, background: `linear-gradient(90deg, ${WARN} 50%, transparent 50%)` },
       ".cm-md-task-done": { color: OK, backgroundColor: OK },
       ".cm-md-task-dropped, .cm-md-task-carried": { color: DIM, background: `linear-gradient(135deg, transparent 45%, ${DIM} 45%, ${DIM} 55%, transparent 55%)` },
-      ".cm-tooltip": { backgroundColor: "#0a0a0a", border: `1px solid ${FG}`, borderRadius: "0", color: FG },
+      ".cm-tooltip": { backgroundColor: "var(--color-popover)", border: `1px solid ${FG}`, borderRadius: "0", color: FG },
       ".cm-wiki-peek": { width: "300px", padding: "10px 12px", display: "flex", flexDirection: "column", gap: "6px", fontFamily: MONO, fontSize: "10px", color: DIM },
       ".cm-wiki-peek-head": { display: "flex", justifyContent: "space-between", gap: "8px" },
       ".cm-wiki-peek-head strong": { color: FG, fontSize: "11px", fontWeight: "600" },
-      ".cm-wiki-peek p": { margin: "0", fontFamily: SERIF, fontSize: "13px", lineHeight: "1.5", color: "#bfbfbf" },
+      ".cm-wiki-peek p": { margin: "0", fontFamily: SERIF, fontSize: "13px", lineHeight: "1.5", color: "var(--color-soft)" },
       ".cm-tooltip-autocomplete > ul": { fontFamily: MONO, fontSize: "11px", maxHeight: "16em" },
       ".cm-tooltip-autocomplete > ul > li": { padding: "4px 10px" },
-      ".cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "#161616", color: FG },
+      ".cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "var(--color-accent)", color: FG },
       ".cm-completionDetail": { color: DIM, fontStyle: "normal", marginLeft: "1em" },
     },
     { dark: true },

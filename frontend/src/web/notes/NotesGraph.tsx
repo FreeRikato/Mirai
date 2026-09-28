@@ -150,14 +150,14 @@ export function NotesGraph({ vault }: { vault: Vault }) {
                   key={h.id}
                   value={h.id}
                   onSelect={() => open(h.id)}
-                  className="flex-col items-stretch gap-1 rounded-none border-l-2 border-transparent px-3 py-2 data-[selected=true]:border-fg data-[selected=true]:bg-[#111]"
+                  className="flex-col items-stretch gap-1 rounded-none border-l-2 border-transparent px-3 py-2 data-[selected=true]:border-fg data-[selected=true]:bg-accent"
                 >
                   <span className="flex items-center gap-2 text-[11px] text-fg">
                     <span className="size-1.5 shrink-0 rounded-full" style={{ background: vault.colors.get(vault.byId.get(h.id)?.folder ?? "") }} />
                     <span className="truncate">{h.title}</span>
                     <span className="ml-auto shrink-0 text-[10px] text-dim">{h.inTitle ? "title" : vault.byId.get(h.id)?.folder || "vault"}</span>
                   </span>
-                  <span className="line-clamp-2 font-serif text-[12px] leading-[1.45] text-[#a6a6a6]">{h.snippet}</span>
+                  <span className="line-clamp-2 font-serif text-[12px] leading-[1.45] text-dim">{h.snippet}</span>
                 </CommandItem>
               ))}
             </CommandList>
@@ -253,7 +253,7 @@ export function NotesGraph({ vault }: { vault: Vault }) {
             <span className="truncate text-[12px] font-semibold text-fg">{hovered.title}</span>
             <span className="ml-auto shrink-0 text-[10px] text-dim">{hovered.folder || "vault"}</span>
           </span>
-          {hovered.excerpt && <span className="line-clamp-3 font-serif text-[13px] leading-[1.5] text-[#d9d9d9]">{hovered.excerpt}</span>}
+          {hovered.excerpt && <span className="line-clamp-3 font-serif text-[13px] leading-[1.5] text-soft">{hovered.excerpt}</span>}
           <span className="flex gap-3.5 text-[10px] text-dim">
             <span>{hovered.links.length} out · {vault.notes.filter(n => n.links.some(l => l.to === hovered.id)).length} in</span>
             <span>edited {ago(hovered.mtime)}</span>

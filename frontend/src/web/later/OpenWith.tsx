@@ -99,7 +99,7 @@ export function OpenWith({ item, reason }: { item: LaterItem; reason: string }) 
 
 export function Tldr({ item }: { item: LaterItem }) {
   return (
-    <section aria-label="mirAI tl;dr" className="flex flex-col gap-1.5 border-l-2 border-fg bg-[#0a0a0a] px-4 py-3">
+    <section aria-label="mirAI tl;dr" className="flex flex-col gap-1.5 border-l-2 border-fg bg-popover px-4 py-3">
       <span className="flex items-center justify-between gap-3 text-[10px]">
         <span>mirAI tl;dr</span>
         <span className="text-faint">mock</span>

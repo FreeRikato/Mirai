@@ -114,7 +114,7 @@ export function PrTable({ queue, groups, selected, onSelect, ...ctx }: { queue: 
                 data-pr={pr.id}
                 aria-selected={on}
                 onClick={() => onSelect(pr.id)}
-                className={cn("cursor-pointer border-rule", on ? "bg-raise shadow-[inset_2px_0_0_var(--color-fg)] hover:bg-raise" : "hover:bg-hover")}
+                className={cn("cursor-pointer border-rule", on ? "bg-raise shadow-[inset_2px_0_0_var(--color-selection)] hover:bg-raise" : "hover:bg-hover")}
               >
                 <TableCell className={cn(td, "w-[34px]")}>
                   <span className={cn("block size-[7px] rounded-full", toneDot[stateTone(pr)])} />

@@ -27,7 +27,7 @@ export function CommandPalette() {
   };
 
   return (
-    <CommandDialog filter={pageScore} open={open} onOpenChange={setOpen} title="search or ask mirAI" description="Go to any page or ask mirAI" className="border-rule bg-popover font-mono" showCloseButton={false}>
+    <CommandDialog filter={pageScore} open={open} onOpenChange={setOpen} title="search or ask mirAI" description="Go to any page or ask mirAI" className="border-focus bg-popover font-mono" showCloseButton={false}>
       <CommandInput value={query} onValueChange={setQuery} placeholder="search or ask mirAI" className="font-mono text-[12px]" />
       <CommandList>
         <CommandEmpty className="py-4 text-center text-dim">no page matches</CommandEmpty>

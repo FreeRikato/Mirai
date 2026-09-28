@@ -51,6 +51,13 @@ export const MetricsSchema = z.object({
     .nullable(),
   topProcs: z.array(z.object({ name: z.string(), cpu: z.number() })),
   failedServices: z.array(z.string()),
+  system: z
+    .object({
+      mode: z.enum(["dark", "light"]),
+      colors: z.record(z.string(), z.string()),
+      monoFont: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const ProcessSchema = z.object({
@@ -188,7 +195,11 @@ export type ServerMessage =
   | { type: "host"; name: string; detail: HostDetail }
   | { type: "host-error"; name: string; error: string; at: number }
   | { type: "tasks-local"; snapshot: LocalSnapshot }
-  | { type: "notes"; snapshot: NotesSnapshot };
+  | { type: "notes"; snapshot: NotesSnapshot }
+  | { type: "open"; path: string };
 
 export const ClientMessageSchema = z.object({ type: z.literal("watch"), fleet: z.boolean(), host: z.string().nullable() });
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;
+
+export const DesktopMessageSchema = z.object({ type: z.literal("desktop"), machine: z.string().min(1) });
+export type DesktopMessage = z.infer<typeof DesktopMessageSchema>;

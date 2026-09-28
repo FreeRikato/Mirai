@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tansta
 import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { create } from "zustand";
-import type { ClientMessage, Fleet, FleetEvent, HostDetail, KillRequest, LoadRange, LoadStrip, ServerMessage } from "@/shared/schema";
+import type { ClientMessage, DesktopMessage, Fleet, FleetEvent, HostDetail, KillRequest, LoadRange, LoadStrip, ServerMessage } from "@/shared/schema";
+import { navigate } from "./router";
+import { applySystemTheme, desktopMachineForSearch } from "./systemTheme";
 
 export const keys = {
   fleet: ["fleet"] as const,
@@ -103,6 +105,11 @@ function apply(qc: QueryClient, msg: ServerMessage) {
   switch (msg.type) {
     case "fleet":
       qc.setQueryData(keys.fleet, msg.fleet);
+      if (typeof window !== "undefined") {
+        const desktopMachine = desktopMachineForSearch(window.location.search);
+        const machine = desktopMachine ? msg.fleet.machines.find(m => m.ts.name === desktopMachine) : undefined;
+        applySystemTheme(machine?.kind === "live" ? machine.metrics.system : undefined);
+      }
       return;
     case "events":
       qc.setQueryData(keys.events, msg.events);
@@ -121,14 +128,19 @@ function apply(qc: QueryClient, msg: ServerMessage) {
       qc.setQueryData(keys.notes, msg.snapshot);
       void qc.invalidateQueries({ queryKey: keys.noteFiles });
       return;
+    case "open":
+      navigate(msg.path);
+      return;
   }
 }
 
-export function useLiveSocket(watching: string | null, liveFleet: boolean) {
+export function useLiveSocket(watching: string | null, liveFleet: boolean, desktopMachine: string | null = null) {
   const qc = useQueryClient();
   const socket = useRef<WebSocket | null>(null);
   const watchRef = useRef<ClientMessage>({ type: "watch", fleet: liveFleet, host: watching });
+  const desktopRef = useRef<DesktopMessage | null>(desktopMachine ? { type: "desktop", machine: desktopMachine } : null);
   watchRef.current = { type: "watch", fleet: liveFleet, host: watching };
+  desktopRef.current = desktopMachine ? { type: "desktop", machine: desktopMachine } : null;
 
   useEffect(() => {
     let closed = false;
@@ -140,9 +152,13 @@ export function useLiveSocket(watching: string | null, liveFleet: boolean) {
         retry = 500;
         setLinked(true);
         ws.send(JSON.stringify(watchRef.current));
+        if (desktopRef.current) ws.send(JSON.stringify(desktopRef.current));
         void qc.invalidateQueries({ queryKey: keys.events });
       };
-      ws.onmessage = e => apply(qc, JSON.parse(String(e.data)));
+      ws.onmessage = e => {
+        const msg = JSON.parse(String(e.data)) as ServerMessage;
+        apply(qc, msg);
+      };
       ws.onclose = () => {
         if (closed) return;
         setLinked(false);
@@ -159,6 +175,8 @@ export function useLiveSocket(watching: string | null, liveFleet: boolean) {
 
   useEffect(() => {
     const ws = socket.current;
-    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(watchRef.current));
-  }, [watching, liveFleet]);
+    if (ws?.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(watchRef.current));
+    if (desktopRef.current) ws.send(JSON.stringify(desktopRef.current));
+  }, [watching, liveFleet, desktopMachine]);
 }

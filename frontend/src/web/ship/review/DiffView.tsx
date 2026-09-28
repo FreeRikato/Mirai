@@ -16,7 +16,11 @@ export type Colours = { old: readonly TokenLine[] | null; new: readonly TokenLin
 
 export const anchorKey = (a: Anchor) => `${a.side}:${a.line}`;
 
-const lineTone: Record<DiffLine["kind"], string> = { add: "bg-[#07170e]", del: "bg-[#1c0a08]", context: "" };
+const lineTone: Record<DiffLine["kind"], string> = {
+  add: "color-mix(in srgb, var(--color-ok) 12%, var(--color-bg))",
+  del: "color-mix(in srgb, var(--color-bad) 12%, var(--color-bg))",
+  context: "transparent",
+};
 const signTone: Record<DiffLine["kind"], string> = { add: "text-ok", del: "text-bad", context: "text-faint" };
 const SIGN: Record<DiffLine["kind"], string> = { add: "+", del: "−", context: " " };
 
@@ -39,7 +43,7 @@ export function DiffView({ file, mode, notes, colours, prUrl }: { file: ReviewFi
     <div role="table" aria-label={`diff of ${file.path}`} className="text-[10px] leading-[1.7]">
       {file.hunks.map(h => (
         <Fragment key={h.header}>
-          <div className="border-y border-rule bg-[#0b0f1a] px-5 py-1 text-link">{h.header}</div>
+          <div className="border-y border-rule px-5 py-1 text-link" style={{ backgroundColor: "color-mix(in srgb, var(--color-link) 12%, var(--color-bg))" }}>{h.header}</div>
           {mode === "split" ? <SplitHunk hunk={h} notes={notes} colours={colours} /> : <UnifiedHunk hunk={h} notes={notes} colours={colours} />}
         </Fragment>
       ))}
@@ -52,7 +56,7 @@ function UnifiedHunk({ hunk, notes, colours }: { hunk: Hunk; notes: NoteContext;
     const a = anchorOf(line);
     return (
       <Fragment key={`${line.old}:${line.new}`}>
-        <div role="row" className={cn("group flex", lineTone[line.kind])}>
+        <div role="row" className="group flex" style={{ backgroundColor: lineTone[line.kind] }}>
           <Num n={line.old} />
           <Num n={line.new} />
           <Code line={line} tokens={tokensOf(colours, line)} onComment={() => notes.compose(a)} />
@@ -82,9 +86,9 @@ function SplitHunk({ hunk, notes, colours }: { hunk: Hunk; notes: NoteContext; c
 }
 
 function Half({ line, side, colours, onComment }: { line: DiffLine | null; side: "old" | "new"; colours: Colours; onComment: (a: Anchor) => void }) {
-  if (!line) return <div className="flex-1 bg-[#070707]" />;
+  if (!line) return <div className="flex-1" style={{ backgroundColor: "color-mix(in srgb, var(--color-fg) 4%, var(--color-bg))" }} />;
   return (
-    <div className={cn("group flex min-w-0 flex-1", lineTone[line.kind])}>
+    <div className="group flex min-w-0 flex-1" style={{ backgroundColor: lineTone[line.kind] }}>
       <Num n={side === "old" ? line.old : line.new} />
       <Code line={line} tokens={tokensOf(colours, line)} onComment={() => onComment(anchorOf(line))} />
     </div>

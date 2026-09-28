@@ -17,12 +17,14 @@ type UiState = {
   paletteOpen: boolean;
   loadRange: LoadRange;
   processTab: ProcessTab;
+  themeVersion: number;
   setNavOpen: (open: boolean) => void;
   setMirAIOpen: (open: boolean) => void;
   askMirAI: (question: string) => void;
   setPaletteOpen: (open: boolean) => void;
   setLoadRange: (range: LoadRange) => void;
   setProcessTab: (tab: ProcessTab) => void;
+  bumpThemeVersion: () => void;
 };
 
 export const useUi = create<UiState>()(set => ({
@@ -36,10 +38,12 @@ export const useUi = create<UiState>()(set => ({
   paletteOpen: false,
   loadRange: "24h",
   processTab: "cpu",
+  themeVersion: 0,
   setNavOpen: navOpen => set({ navOpen }),
   setMirAIOpen: mirAIOpen => set(mirAIOpen ? { mirAIOpen, mirAIBack: false } : { mirAIOpen }),
   askMirAI: mirAIDraft => set({ mirAIDraft, mirAIOpen: true, paletteOpen: false }),
   setPaletteOpen: paletteOpen => set({ paletteOpen }),
   setLoadRange: loadRange => set({ loadRange }),
   setProcessTab: processTab => set({ processTab }),
+  bumpThemeVersion: () => set(state => ({ themeVersion: state.themeVersion + 1 })),
 }));
