@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "mirai.fleet",
+  "name": "Mirai fleet",
+  "version": "1.0.0",
+  "author": "Mirai",
+  "description": "Fleet health and review badge for the Omarchy bar",
+  "kinds": ["bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": { "barWidget": "Fleet.qml" },
+  "barWidget": {
+    "displayName": "Mirai fleet",
+    "description": "Fleet health and review badge",
+    "category": "Mirai",
+    "allowMultiple": false
+  }
+}
