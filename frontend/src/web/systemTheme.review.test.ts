@@ -8,13 +8,15 @@ const LIGHT_THEME = {
 };
 
 describe("System theme selection contrast", () => {
-  test("falls back to the theme foreground when selection is absent", () => {
+  test("falls back to a subtle foreground mix when selection is absent", () => {
     const vars = systemThemeVars(LIGHT_THEME);
-    expect(vars["--color-selection"]).toBe(vars["--color-fg"]);
+    expect(vars["--color-selection"]).toBe("color-mix(in srgb, var(--color-fg) 25%, var(--color-bg))");
+    expect(vars["--color-selection-text"]).toBe("var(--color-fg)");
   });
 
-  test("draws selected text with the normal foreground color", async () => {
+  test("keeps the built-in selection text/background split without a System theme", async () => {
     const css = await Bun.file(new URL("../../styles/globals.css", import.meta.url)).text();
-    expect(css).toMatch(/::selection\s*\{[^}]*color:\s*var\(--color-fg\)/s);
+    expect(css).toMatch(/::selection\s*\{[^}]*background:\s*var\(--color-selection,\s*var\(--color-fg\)\)/s);
+    expect(css).toMatch(/::selection\s*\{[^}]*color:\s*var\(--color-selection-text,\s*var\(--color-bg\)\)/s);
   });
 });
