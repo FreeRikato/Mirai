@@ -35,6 +35,7 @@ function loadMermaid() {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "strict",
+      secure: ["secure", "securityLevel", "startOnLoad", "maxTextSize", "suppressErrorRendering", "maxEdges", "theme", "themeVariables", "themeCSS", "darkMode", "fontFamily"],
       theme: "base",
       flowchart: { useMaxWidth: false },
       sequence: { useMaxWidth: false },
