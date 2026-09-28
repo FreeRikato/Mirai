@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { normalizeMermaidColor } from "./ship/GithubHtml";
 import { applySystemTheme } from "./systemTheme";
 import { useUi } from "./store";
 
@@ -28,6 +29,37 @@ test("publishes every System theme change for surfaces that read colors in JavaS
     expect(seen).toEqual([before + 1]);
   } finally {
     unsubscribe();
+    Object.defineProperty(globalThis, "document", { configurable: true, value: previousDocument });
+  }
+});
+
+test("normalizes System theme colors before Mermaid sees CSS color functions", () => {
+  const previousDocument = globalThis.document;
+  let painted = "";
+  const context = {
+    get fillStyle() {
+      return painted;
+    },
+    set fillStyle(value: string) {
+      painted = value;
+    },
+    fillRect: (_x: number, _y: number, _width: number, _height: number) => {},
+    getImageData: () => ({ data: new Uint8ClampedArray([37, 39, 52, 255]) }),
+  };
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    value: {
+      createElement: (name: string) => {
+        expect(name).toBe("canvas");
+        return { width: 0, height: 0, getContext: () => context };
+      },
+    },
+  });
+  try {
+    const value = "color(srgb 0.1457 0.1518 0.2029)";
+    expect(normalizeMermaidColor(value, "#000000")).toBe("rgb(37, 39, 52)");
+    expect(painted).toBe(value);
+  } finally {
     Object.defineProperty(globalThis, "document", { configurable: true, value: previousDocument });
   }
 });
