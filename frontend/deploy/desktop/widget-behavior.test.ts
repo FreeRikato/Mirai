@@ -8,8 +8,8 @@ test("Fleet QML renders the table popup and actionable critical notifications", 
   expect(QML).toContain('PopupCard {');
   expect(QML).toContain('triggerMode: "hover"');
   for (const heading of ["machine", "cpu", "mem", "temp", "disk"]) expect(QML).toContain(`text: "${heading}"`);
-  expect(QML).toContain("notify-send -u critical -A open=Open");
-  expect(QML).toContain("notificationOutput");
+  expect(QML).toContain("omarchy-notification-send");
+  expect(QML).toContain("sendNotice");
   expect(QML).toContain("notice.command");
 });
 

@@ -16,8 +16,6 @@ Item {
   property var model: Fleet.view(snapshot, limits)
   property int lastSeenId: -1
   property bool hovering: false
-  property var pendingNotices: []
-  property var activeNotice: null
 
   implicitWidth: label.implicitWidth + 14
   implicitHeight: bar ? bar.barSize : 26
@@ -28,19 +26,12 @@ Item {
     lastSeenId = -1
   }
 
-  function startNotification() {
-    if (notificationProcess.running || activeNotice || pendingNotices.length === 0) return
-    activeNotice = pendingNotices[0]
-    pendingNotices = pendingNotices.slice(1)
-    notificationOutput.text = ""
-    notificationProcess.command = ["bash", "-c", "notify-send -u critical -A open=Open \"$1\" \"$2\"", "mirai-notification", activeNotice.title, activeNotice.body]
-    notificationProcess.running = true
-  }
-
-  function runNoticeCommand(notice) {
+  function sendNotice(notice) {
     if (!notice || !notice.command) return
-    if (bar) bar.run(notice.command.join(" "))
-    else Quickshell.execDetached(notice.command)
+    const proc = noticeProcess.createObject(root, {
+      command: ["omarchy-notification-send", "--app-name", "Mirai", "-u", notice.urgency || "critical", notice.title, notice.body, "--exec"].concat(notice.command),
+    })
+    proc.running = true
   }
 
   function applyPoll() {
@@ -50,8 +41,7 @@ Item {
       snapshot = next
       const result = Fleet.notifications(lastSeenId < 0 ? null : lastSeenId, next.events)
       lastSeenId = result.lastSeenId === null || result.lastSeenId === undefined ? lastSeenId : result.lastSeenId
-      pendingNotices = pendingNotices.concat(result.notify)
-      startNotification()
+      result.notify.forEach(root.sendNotice)
     } catch (error) {
       resetView()
     }
@@ -103,16 +93,11 @@ Item {
     }
   }
 
-  Process {
-    id: notificationProcess
-    running: false
-    stdout: StdioCollector { id: notificationOutput; waitForEnd: true }
-    onExited: {
-      const notice = root.activeNotice
-      root.activeNotice = null
-      if (exitCode === 0 && notificationOutput.text.trim() === "open") root.runNoticeCommand(notice)
-      notificationOutput.text = ""
-      root.startNotification()
+  Component {
+    id: noticeProcess
+    Process {
+      running: false
+      onExited: destroy()
     }
   }
 
