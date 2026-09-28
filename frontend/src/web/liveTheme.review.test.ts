@@ -9,7 +9,10 @@ function readThemeVersion(state: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
 }
 
-test("publishes every System theme change for surfaces that read colors in JavaScript", () => {
+const TOKYO = { mode: "dark", monoFont: "JetBrainsMono Nerd Font", colors: { background: "#1a1b26", foreground: "#a9b1d6", accent: "#7aa2f7" } } as const;
+const LATTE = { mode: "light", monoFont: "JetBrainsMono Nerd Font", colors: { background: "#eff1f5", foreground: "#4c4f69", accent: "#1e66f5" } } as const;
+
+test("publishes a System theme change once, and not the same theme arriving again with every fleet update", () => {
   const before = readThemeVersion(useUi.getState()) ?? 0;
   const seen: number[] = [];
   const unsubscribe = useUi.subscribe(state => {
@@ -25,8 +28,16 @@ test("publishes every System theme change for surfaces that read colors in JavaS
   Object.defineProperty(globalThis, "document", { configurable: true, value: { documentElement: { style } } });
   try {
     applySystemTheme(undefined);
-    expect(readThemeVersion(useUi.getState())).toBe(before + 1);
+    expect(seen).toEqual([]);
+    applySystemTheme(TOKYO);
+    applySystemTheme(TOKYO);
+    applySystemTheme(TOKYO);
     expect(seen).toEqual([before + 1]);
+    applySystemTheme(LATTE);
+    expect(seen).toEqual([before + 1, before + 2]);
+    applySystemTheme(undefined);
+    applySystemTheme(undefined);
+    expect(seen).toEqual([before + 1, before + 2, before + 3]);
   } finally {
     unsubscribe();
     Object.defineProperty(globalThis, "document", { configurable: true, value: previousDocument });

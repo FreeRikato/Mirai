@@ -141,7 +141,18 @@ export function desktopMachineForSearch(search: string): string | null {
     return fromUrl;
   }
 }
+/*
+ * Fleet updates arrive every couple of seconds and carry the same theme almost
+ * every time. Surfaces that read colors in JavaScript re-render on
+ * themeVersion, so only a real change may bump it; the default look needs no
+ * applying, which is why nothing counts as applied at first.
+ */
+let appliedKey = "";
+
 export function applySystemTheme(theme: SystemTheme | undefined): void {
+  const key = theme ? JSON.stringify(systemThemeVars(theme)) : "";
+  if (key === appliedKey) return;
+  appliedKey = key;
   const root = document.documentElement;
   for (const name of SYSTEM_THEME_VARIABLES) root.style.removeProperty(name);
   for (const name of Object.values(SYSTEM_THEME_ALIASES)) root.style.removeProperty(name);

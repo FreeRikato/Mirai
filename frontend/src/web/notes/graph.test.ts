@@ -36,7 +36,7 @@ describe("folderColors", () => {
   test("gives the biggest folders the first palette colors and root notes a neutral tone", () => {
     const c = folderColors([note("1", [], "x"), note("2", [], "x"), note("3", [], "y"), note("4")]);
     expect(c.get("x")).not.toBe(c.get("y"));
-    expect(c.get("")).toBe("#cfcfcf");
+    expect(c.get("")).toBe("var(--color-soft)");
   });
 });
 

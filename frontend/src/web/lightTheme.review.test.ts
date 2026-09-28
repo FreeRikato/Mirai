@@ -56,7 +56,7 @@ describe("light System theme surfaces", () => {
     expect(notesGraph).not.toMatch(/text-\[#(?:a6a6a6|d9d9d9)\]/);
     expect(graphCanvas).toContain('systemThemeValue("--color-fg"');
     expect(graphCanvas).toContain('systemThemeValue("--color-soft"');
-    expect(graph).toContain('systemThemeValue("--color-soft"');
+    expect(graph).toContain('ROOT_COLOR = "var(--color-soft)"');
     expect(diff).toContain("color-mix(in srgb, var(--color-ok)");
     expect(diff).toContain("color-mix(in srgb, var(--color-bad)");
     expect(diff).toContain("color-mix(in srgb, var(--color-link)");
