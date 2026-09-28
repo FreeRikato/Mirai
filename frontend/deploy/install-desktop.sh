@@ -253,13 +253,13 @@ if [[ -n "\$address" ]]; then
   fi
 fi
 if command -v omarchy-launch-webapp >/dev/null 2>&1; then
-  exec omarchy-launch-webapp "\$url" --class=mirai
+  exec omarchy-launch-webapp "\$url"
 elif command -v omarchy-launch-or-focus-webapp >/dev/null 2>&1; then
-  exec omarchy-launch-or-focus-webapp mirai "\$url" --class=mirai
+  exec omarchy-launch-or-focus-webapp mirai "\$url"
 elif command -v uwsm-app >/dev/null 2>&1; then
-  exec uwsm-app -- chromium --app="\$url" --class=mirai
+  exec uwsm-app -- chromium --app="\$url"
 elif command -v chromium >/dev/null 2>&1; then
-  exec chromium --app="\$url" --class=mirai
+  exec chromium --app="\$url"
 else
   exec xdg-open "\$url"
 fi
@@ -284,7 +284,7 @@ install_local() {
   mark_created "$menu"
 
   append_block "$bindings" "-- $MARK_BEGIN\nhl.unbind(\"SUPER + M\")\nhl.unbind(\"SUPER + ALT + M\")\no.bind(\"SUPER + M\", \"Mirai\", \"mirai-desktop-open /machines\")\no.bind(\"SUPER + ALT + M\", \"Ask mirAI\", \"mirai-desktop-open '/machines?mirai=1'\")\n-- $MARK_END"
-  append_block "$hyprland" "-- $MARK_BEGIN\no.window(\"mirai\", { opacity = 1.0 })\n-- $MARK_END"
+  append_block "$hyprland" "-- $MARK_BEGIN\n-- Chromium ignores --class on Wayland and names app windows after the launch URL, so match the fixed page title.\no.window({ class = \"^chrome-\", title = \"^mirai$\" }, { tag = \"-default-opacity\", opacity = \"1 1\" })\n-- $MARK_END"
 
   update_shell_layout "$shell_json" "$hub"
   update_menu "$menu" "$hub"
@@ -303,7 +303,6 @@ Exec=$launcher /machines
 Icon=mirai
 Terminal=false
 Categories=Network;Utility;
-StartupWMClass=mirai
 EOF
   write_launcher "$launcher" "$hub"
   if command -v omarchy-restart-shell >/dev/null 2>&1; then omarchy-restart-shell >/dev/null 2>&1 || true; fi
