@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { normalizeMermaidColor } from "./ship/GithubHtml";
+import { normalizeMermaidColor } from "./ship/mermaidTheme";
 import { applySystemTheme } from "./systemTheme";
 import { useUi } from "./store";
 

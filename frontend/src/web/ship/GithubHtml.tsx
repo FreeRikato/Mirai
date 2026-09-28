@@ -3,19 +3,26 @@ import { useEffect, useMemo, useRef } from "react";
 import { createSanitizer } from "../safeHtml";
 import { useUi } from "../store";
 import { systemThemeValue } from "../systemTheme";
+import { normalizeMermaidColor } from "./mermaidTheme";
 
 const sanitizeGithubHtml = createSanitizer("https://github.com");
+
+
+function mermaidColor(name: string, fallback: string): string {
+  const resolved = systemThemeValue(name, fallback);
+  return normalizeMermaidColor(resolved, fallback);
+}
 
 function mermaidTheme() {
   return {
     darkMode: getComputedStyle(document.documentElement).colorScheme === "dark",
-    background: systemThemeValue("--color-bg", "#000000"),
-    primaryColor: systemThemeValue("--color-raise", "#0e0e0e"),
-    primaryTextColor: systemThemeValue("--color-fg", "#ffffff"),
-    primaryBorderColor: systemThemeValue("--color-faint", "#3a3a3a"),
-    lineColor: systemThemeValue("--color-dim", "#8c8c8c"),
-    secondaryColor: systemThemeValue("--color-lift", "#141414"),
-    tertiaryColor: systemThemeValue("--color-popover", "#0a0a0a"),
+    background: mermaidColor("--color-bg", "#000000"),
+    primaryColor: mermaidColor("--color-raise", "#0e0e0e"),
+    primaryTextColor: mermaidColor("--color-fg", "#ffffff"),
+    primaryBorderColor: mermaidColor("--color-faint", "#3a3a3a"),
+    lineColor: mermaidColor("--color-dim", "#8c8c8c"),
+    secondaryColor: mermaidColor("--color-lift", "#141414"),
+    tertiaryColor: mermaidColor("--color-popover", "#0a0a0a"),
     fontFamily: systemThemeValue("--font-mono", '"Martian Mono", ui-monospace, monospace'),
     fontSize: "11px",
   };
@@ -67,7 +74,11 @@ async function renderMermaidBlocks(root: HTMLElement, isStale: () => boolean) {
     return null;
   });
   if (!mermaid) return;
-  mermaid.initialize(mermaidConfig());
+  try {
+    mermaid.initialize(mermaidConfig());
+  } catch {
+    return;
+  }
   for (const block of blocks) {
     if (isStale()) return;
     const figure = document.createElement("div");
