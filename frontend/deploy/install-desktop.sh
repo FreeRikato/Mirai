@@ -47,7 +47,7 @@ append_block() {
 
 hub_from_tailscale() {
   local name
-  name=$(tailscale status --json | python3 -c 'import json, sys; print(json.load(sys)["Self"].get("DNSName", "").rstrip("."))')
+  name=$(tailscale status --json | python3 -c 'import json, sys; print(json.load(sys.stdin)["Self"].get("DNSName", "").rstrip("."))')
   [[ -n "$name" ]] || { echo "could not derive the hub URL from tailscale status; set MIRAI_DESKTOP_HUB" >&2; return 1; }
   printf 'http://%s:3131' "$name"
 }
