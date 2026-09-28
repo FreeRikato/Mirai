@@ -193,6 +193,7 @@ fn background_luminance(value: Option<&str>) -> Option<u16> {
 
 fn system_theme(path: &Path, mono_font: String) -> Option<SystemTheme> {
     let body = fs::read_to_string(path).ok()?;
+    let body = body.strip_prefix('\u{feff}').unwrap_or(&body);
     let mut mode = None;
     let mut theme_type = None;
     let mut colors = BTreeMap::new();
