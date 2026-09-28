@@ -184,11 +184,15 @@ block = [f"// {begin}"]
 for key, value in entries:
     block.append(f"  {json.dumps(key)}: {json.dumps(value, ensure_ascii=False)},")
 block.append(f"// {end}")
-insert = "\n" + "\n".join(block) + "\n"
 position = text.rfind("}")
 if position < 0:
     raise SystemExit(f"{path} is not a JSONC object")
-text = text[:position] + insert + text[position:]
+prefix = text[:position]
+trimmed = prefix.rstrip()
+whitespace = prefix[len(trimmed):]
+separator = "" if trimmed.endswith(("{", ",")) else ","
+insert = separator + whitespace + "\n" + "\n".join(block) + "\n"
+text = trimmed + insert + text[position:]
 with open(path, "w", encoding="utf-8") as handle:
     handle.write(text)
 PY
