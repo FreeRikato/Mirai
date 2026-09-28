@@ -507,7 +507,7 @@ mod tests {
                 fs::write(dir.path().join("light.mode"), "").expect("light.mode");
             }
 
-            let theme = system_theme(&path, "Mono".into()).expect("colors.toml always reports system");
+            let theme = system_theme(&path, Some("Mono".into())).expect("colors.toml always reports system");
             assert_eq!(theme.mode, expected, "mode for {body:?}");
             assert_eq!(theme.colors.get("accent").map(String::as_str), body.contains("accent =").then_some("#123456"), "colors remain present");
         }
@@ -519,7 +519,7 @@ mod tests {
         let path = dir.path().join("colors.toml");
         fs::write(&path, "\u{feff}mode = \"light\"\nbackground = \"#000000\"\n").expect("colors.toml");
 
-        let theme = system_theme(&path, "Mono".into()).expect("colors.toml always reports system");
+        let theme = system_theme(&path, Some("Mono".into())).expect("colors.toml always reports system");
         assert_eq!(theme.mode, SystemThemeMode::Dark);
         assert_eq!(theme.colors.get("background").map(String::as_str), Some("#000000"));
     }
