@@ -1,8 +1,8 @@
 import { cn } from "cn";
 import { useEffect, useRef, useState, type PointerEvent, type WheelEvent } from "react";
+import { systemThemeValue } from "../systemTheme";
 import type { Graph, Layout, Point } from "./graph";
 import { toScreen as project, zoomAt, type Camera, type Size } from "./camera";
-
 export type Emphasis = {
   lit: ReadonlySet<string> | null;
   rings: ReadonlyMap<string, "strong" | "soft">;
@@ -64,6 +64,13 @@ export function GraphCanvas({ graph, layout, colors, camera, onCamera, emphasis,
     el.height = Math.round(size.h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size.w, size.h);
+    const fg = systemThemeValue("--color-fg", "#ffffff");
+    const soft = systemThemeValue("--color-soft", "#cfcfcf");
+    const bg = systemThemeValue("--color-bg", "#000000");
+    const edgeDim = `color-mix(in srgb, ${soft} 16%, ${bg})`;
+    const edgeLit = `color-mix(in srgb, ${fg} 16%, ${bg})`;
+    const edgeStrong = `color-mix(in srgb, ${fg} 60%, ${bg})`;
+    const ringSoft = `color-mix(in srgb, ${soft} 35%, ${bg})`;
     const { lit, rings, strongEdges, labels } = emphasis;
     const isLit = (id: string) => lit === null || lit.has(id);
     const screen = new Map<string, Point>();
@@ -85,9 +92,9 @@ export function GraphCanvas({ graph, layout, colors, camera, onCamera, emphasis,
       ctx.lineWidth = width;
       ctx.stroke();
     };
-    strokeEdges("rgba(255,255,255,0.04)", 1, (a, b) => !strongEdges.has(edgeKey(a, b)) && !(isLit(a) && isLit(b)));
-    strokeEdges("rgba(255,255,255,0.16)", 1, (a, b) => !strongEdges.has(edgeKey(a, b)) && isLit(a) && isLit(b));
-    strokeEdges("rgba(255,255,255,0.6)", 1.3, (a, b) => strongEdges.has(edgeKey(a, b)));
+    strokeEdges(edgeDim, 1, (a, b) => !strongEdges.has(edgeKey(a, b)) && !(isLit(a) && isLit(b)));
+    strokeEdges(edgeLit, 1, (a, b) => !strongEdges.has(edgeKey(a, b)) && isLit(a) && isLit(b));
+    strokeEdges(edgeStrong, 1.3, (a, b) => strongEdges.has(edgeKey(a, b)));
 
     const hubDegree = graph.nodes.map(n => n.degree).toSorted((a, b) => b - a)[Math.floor(graph.nodes.length * 0.08)] ?? Infinity;
     ctx.font = FONT;
@@ -102,18 +109,18 @@ export function GraphCanvas({ graph, layout, colors, camera, onCamera, emphasis,
       ctx.globalAlpha = on ? 1 : 0.16;
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = colors.get(n.folder) ?? "#cfcfcf";
+      ctx.fillStyle = n.folder ? (colors.get(n.folder) ?? soft) : soft;
       ctx.fill();
       if (ring) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, r + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = ring === "strong" ? "#ffffff" : "rgba(255,255,255,0.35)";
+        ctx.strokeStyle = ring === "strong" ? fg : ringSoft;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
       const showLabel = ring !== undefined || labels.has(n.id) || camera.k >= LABEL_ZOOM || (n.degree >= Math.max(hubDegree, 2) && on);
       if (showLabel) {
-        ctx.fillStyle = ring === "strong" ? "#ffffff" : "#bfbfbf";
+        ctx.fillStyle = ring === "strong" ? fg : soft;
         ctx.fillText(n.title, p.x, p.y + r + 5);
       }
     }

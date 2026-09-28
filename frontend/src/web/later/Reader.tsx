@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { LaterItem } from "@/shared/later";
 import { useSettings } from "../settings";
+import { systemThemeValue } from "../systemTheme";
 import { useReader } from "./api";
 import { useSurface } from "./ReadingTools";
 import { READER_MAX_WIDTH, useLaterUi, type ReaderFace, type ReaderWidth } from "./store";
@@ -25,29 +26,42 @@ function header(item: LaterItem): string {
   return `<header><div class="meta">${meta}</div><h1>${escapeHtml(item.title)}</h1>${tldr}</header>`;
 }
 
-function readerDoc(html: string, item: LaterItem): string {
+type ReaderTheme = {
+  bg: string;
+  fg: string;
+  dim: string;
+  soft: string;
+  rule: string;
+  raise: string;
+  faint: string;
+  link: string;
+  warn: string;
+  popover: string;
+};
+
+function readerDoc(html: string, item: LaterItem, theme: ReaderTheme): string {
   return `<!doctype html><html><head><meta charset="utf-8"><base href="${escapeHtml(item.url)}" target="_blank"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;600&family=Martian+Mono:wght@400&display=swap"><style>
-:root{color-scheme:dark;--size:17px;--face:serif;--width:640px}
-html,body{margin:0;background:#000;color:#d9d9d9}
+:root{color-scheme:light dark;--size:17px;--face:serif;--width:640px}
+html,body{margin:0;background:${theme.bg};color:${theme.soft}}
 *{scrollbar-width:none}::-webkit-scrollbar{display:none}
 body{font-family:var(--face);font-size:var(--size);line-height:1.65;padding:28px 24px 30vh}
 main{max-width:var(--width);margin:0 auto}
-h1,h2,h3,h4{color:#fff;line-height:1.25;font-weight:600}
-a{color:#7fa7ff}
+h1,h2,h3,h4{color:${theme.fg};line-height:1.25;font-weight:600}
+a{color:${theme.link}}
 img,video,figure,iframe{max-width:100%;height:auto}
-pre,code{font-family:"Martian Mono",ui-monospace,monospace;font-size:.78em;background:#0e0e0e}
-pre{padding:12px 16px;overflow-x:auto;border:1px solid #1e1e1e}
-blockquote{margin:0;padding-left:16px;border-left:2px solid #3a3a3a;color:#bdbdbd}
-table{border-collapse:collapse;font-size:.85em}td,th{border:1px solid #1e1e1e;padding:4px 8px}
-hr{border:0;border-top:1px solid #1e1e1e}
+pre,code{font-family:"Martian Mono",ui-monospace,monospace;font-size:.78em;background:${theme.raise}}
+pre{padding:12px 16px;overflow-x:auto;border:1px solid ${theme.rule}}
+blockquote{margin:0;padding-left:16px;border-left:2px solid ${theme.faint};color:${theme.dim}}
+table{border-collapse:collapse;font-size:.85em}td,th{border:1px solid ${theme.rule};padding:4px 8px}
+hr{border:0;border-top:1px solid ${theme.rule}}
 header h1{font-size:1.75em;margin:.3em 0 .6em}
-.meta,.tag{font-family:"Martian Mono",ui-monospace,monospace;font-size:10px;color:#8c8c8c}
-.tldr{border-left:2px solid #fff;background:#0a0a0a;padding:12px 16px;margin:0 0 2em}
-.tag{display:flex;justify-content:space-between;color:#fff}.mock{color:#3a3a3a}
-.tldr ul{margin:.5em 0 0;padding:0;list-style:none;font-size:.85em;color:#fff;line-height:1.45}.tldr li{margin:.25em 0}
-mark[data-mark=hl]{background:rgb(244 182 63/.22);color:inherit;border-bottom:1px solid #f4b63f;cursor:pointer}mark[data-mark=hl][data-note]{border-bottom-style:dashed}
-mark[data-mark=cite]{background:none;color:#fff;outline:1px solid #7fa7ff;outline-offset:3px}
-mark[data-mark=find]{background:none;color:inherit;box-shadow:inset 0 -2px #7fa7ff}mark[data-mark=find][data-current]{background:#7fa7ff;color:#000;box-shadow:none}
+.meta,.tag{font-family:"Martian Mono",ui-monospace,monospace;font-size:10px;color:${theme.dim}}
+.tldr{border-left:2px solid ${theme.fg};background:${theme.popover};padding:12px 16px;margin:0 0 2em}
+.tag{display:flex;justify-content:space-between;color:${theme.fg}}.mock{color:${theme.faint}}
+.tldr ul{margin:.5em 0 0;padding:0;list-style:none;font-size:.85em;color:${theme.fg};line-height:1.45}.tldr li{margin:.25em 0}
+mark[data-mark=hl]{background:color-mix(in srgb, ${theme.warn} 22%, transparent);color:inherit;border-bottom:1px solid ${theme.warn};cursor:pointer}mark[data-mark=hl][data-note]{border-bottom-style:dashed}
+mark[data-mark=cite]{background:none;color:${theme.fg};outline:1px solid ${theme.link};outline-offset:3px}
+mark[data-mark=find]{background:none;color:inherit;box-shadow:inset 0 -2px ${theme.link}}mark[data-mark=find][data-current]{background:${theme.link};color:${theme.bg};box-shadow:none}
 </style></head><body><main>${header(item)}${html}</main></body></html>`;
 }
 
@@ -61,7 +75,19 @@ export function Reader({ item, onProgress }: { item: LaterItem; onProgress: (pro
   const report = useRef(onProgress);
   report.current = onProgress;
   const startAt = useRef(item.progress >= 1 ? 0 : item.position);
-  const html = data?.kind === "ready" ? readerDoc(data.html, item) : null;
+  const theme: ReaderTheme = {
+    bg: systemThemeValue("--color-bg", "#000000"),
+    fg: systemThemeValue("--color-fg", "#ffffff"),
+    dim: systemThemeValue("--color-dim", "#8c8c8c"),
+    soft: systemThemeValue("--color-soft", "#cfcfcf"),
+    rule: systemThemeValue("--color-rule", "#1e1e1e"),
+    raise: systemThemeValue("--color-raise", "#0e0e0e"),
+    faint: systemThemeValue("--color-faint", "#3a3a3a"),
+    link: systemThemeValue("--color-link", "#7fa7ff"),
+    warn: systemThemeValue("--color-warn", "#f4b63f"),
+    popover: systemThemeValue("--color-popover", "#0a0a0a"),
+  };
+  const html = data?.kind === "ready" ? readerDoc(data.html, item, theme) : null;
 
   useEffect(() => {
     const root = frame.current?.contentDocument?.documentElement;

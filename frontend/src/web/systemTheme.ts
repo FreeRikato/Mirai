@@ -87,6 +87,19 @@ const SYSTEM_THEME_ALIASES: Readonly<Record<string, string>> = {
   "--font-mono": "--mirai-font-mono",
 };
 
+export function systemThemeValue(name: string, fallback: string): string {
+  if (typeof document === "undefined") return fallback;
+  const probe = document.createElement("span");
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  probe.style.setProperty(name.startsWith("--font-") ? "font-family" : "color", `var(${name})`);
+  document.documentElement.append(probe);
+  const property = name.startsWith("--font-") ? "font-family" : "color";
+  const value = getComputedStyle(probe).getPropertyValue(property).trim();
+  probe.remove();
+  return value || fallback;
+}
+
 export function systemThemeVars(theme: SystemTheme): Record<string, string> {
   const colors = theme.colors;
   const pick = (key: string, fallback: string) => colors[key] ?? fallback;

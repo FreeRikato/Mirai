@@ -1,21 +1,24 @@
 import type { MermaidConfig } from "mermaid";
 import { useEffect, useMemo, useRef } from "react";
 import { createSanitizer } from "../safeHtml";
+import { systemThemeValue } from "../systemTheme";
 
 const sanitizeGithubHtml = createSanitizer("https://github.com");
 
-const MERMAID_THEME = {
-  darkMode: true,
-  background: "#000000",
-  primaryColor: "#0e0e0e",
-  primaryTextColor: "#ffffff",
-  primaryBorderColor: "#3a3a3a",
-  lineColor: "#8c8c8c",
-  secondaryColor: "#141414",
-  tertiaryColor: "#0a0a0a",
-  fontFamily: '"Martian Mono", ui-monospace, monospace',
-  fontSize: "11px",
-};
+function mermaidTheme() {
+  return {
+    darkMode: getComputedStyle(document.documentElement).colorScheme === "dark",
+    background: systemThemeValue("--color-bg", "#000000"),
+    primaryColor: systemThemeValue("--color-raise", "#0e0e0e"),
+    primaryTextColor: systemThemeValue("--color-fg", "#ffffff"),
+    primaryBorderColor: systemThemeValue("--color-faint", "#3a3a3a"),
+    lineColor: systemThemeValue("--color-dim", "#8c8c8c"),
+    secondaryColor: systemThemeValue("--color-lift", "#141414"),
+    tertiaryColor: systemThemeValue("--color-popover", "#0a0a0a"),
+    fontFamily: systemThemeValue("--font-mono", '"Martian Mono", ui-monospace, monospace'),
+    fontSize: "11px",
+  };
+}
 
 type Mermaid = { initialize: (config: MermaidConfig) => void; render: (id: string, text: string) => Promise<{ svg: string }> };
 
@@ -33,14 +36,13 @@ function loadMermaid() {
       startOnLoad: false,
       securityLevel: "strict",
       theme: "base",
-      themeVariables: MERMAID_THEME,
       flowchart: { useMaxWidth: false },
       sequence: { useMaxWidth: false },
       class: { useMaxWidth: false },
       state: { useMaxWidth: false },
       er: { useMaxWidth: false },
       gantt: { useMaxWidth: false },
-      secure: ["secure", "securityLevel", "startOnLoad", "maxTextSize", "theme", "themeVariables", "themeCSS", "darkMode", "fontFamily"],
+      themeVariables: mermaidTheme(),
     });
     return mermaid;
   });

@@ -1,5 +1,5 @@
 import type { NoteMeta } from "@/shared/notes";
-
+import { systemThemeValue } from "../systemTheme";
 export type GraphNode = { id: string; title: string; folder: string; degree: number };
 export type Edge = readonly [string, string];
 export type Graph = { nodes: GraphNode[]; edges: Edge[]; adjacent: ReadonlyMap<string, ReadonlySet<string>> };
@@ -52,7 +52,7 @@ export function folderColors(notes: readonly NoteMeta[]): Map<string, string> {
   const counts = new Map<string, number>();
   for (const n of notes) if (n.folder) counts.set(n.folder, (counts.get(n.folder) ?? 0) + 1);
   const ranked = [...counts.entries()].toSorted(([a, x], [b, y]) => y - x || a.localeCompare(b));
-  return new Map([["", ROOT_COLOR], ...ranked.map(([f], i): [string, string] => [f, PALETTE[i % PALETTE.length] ?? ROOT_COLOR])]);
+  return new Map([["", systemThemeValue("--color-soft", ROOT_COLOR)], ...ranked.map(([f], i): [string, string] => [f, PALETTE[i % PALETTE.length] ?? ROOT_COLOR])]);
 }
 
 const REPEL = 900;
